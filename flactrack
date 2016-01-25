@@ -1,0 +1,232 @@
+#!/bin/sh
+
+# This script is designed to split single-file flac albums into tagged tracks.
+
+main(){
+	# Gather the metadata that's the same for all of the tracks
+	ALBUM=$( cat "$CUE" |
+		sed '/TRACK/q' |
+		grep TITLE    |
+		grep -o \".*\" |
+		sed 's/^"\(.*\)"$/\1/' )  
+	GENRE=$( cat "$CUE"  |
+		sed '/TRACK/q'    |
+		grep "REM\sGENRE"  |
+		sed 's/REM\sGENRE\s\(.*\).$/\1/' )
+	DATE=$( cat "$CUE"       |
+		sed '/TRACK/q'        |
+		grep "REM\sDATE\|YEAR" |
+		sed 's/REM\sDATE\s\|YEAR\s\(.*\).$/\1/' )
+	TRACKTOTAL=$( grep TRACK.*AUDIO "$CUE" |
+		awk '{print $2}'    |
+		tail -n1           |
+		sed 's/.*\([1-9]{2}\).*/\1/' )
+	# Try to find a cover image if one was not specified. Look for jpg first, then png.
+	oldIFS=$IFS && IFS=$(echo -en "\n\b")
+	if ! [ -a $COVER ]; then
+		for IMAGE in $( find . -maxdepth 2 \( -iname \*.jpg -o -iname \*.jpeg \) ); do
+		    image=$( echo ${IMAGE,,} | sed 's/.*\/\(.*\)\.jpe\?g/\1/' )
+		    if [ "$image" == "cover" ] || [ "$image" == ".cover" ]; then
+				COVER=$IMAGE; break
+			elif [ "$image" == "folder" ] || [ "$image" == ".folder" ]; then
+				COVER=$IMAGE; break
+			elif [ "$image" == "front" ] || [ "$image" == ".front" ]; then
+				COVER=$IMAGE; break
+		    fi
+		done
+	fi
+	if ! [ -a $COVER ]; then
+		for IMAGE in $(find . -maxdepth 2 -iname *.png); do
+	    	image=$( echo ${IMAGE,,} | sed 's/.*\/\(.*\)\.png/\1/' )
+		    if [ "$image" == "cover" ] || [ "$image" == ".cover" ]; then
+				COVER=$IMAGE; break
+			elif [ "$image" == "folder" ] || [ "$image" == ".folder" ]; then
+				COVER=$IMAGE; break
+			elif [ "$image" == "front" ] || [ "$image" == ".front" ]; then
+				COVER=$IMAGE; break
+		    fi
+		done
+	fi
+	IFS=$oldIFS
+	for TRACKNUMBER in $(seq $TRACKTOTAL); do
+		TAGS=''; TITLE=''; PERFORMER=''; SONGWRITER='';
+		if [ $TRACKNUMBER -ge 1 ] && [ $TRACKNUMBER -le 9 ]; then
+			TRACKNUMBER=0$TRACKNUMBER
+		fi
+		# count the number of lines in the TRACK section of the cue file
+		fields=0
+		line=$( grep -n "TRACK $TRACKNUMBER" "$CUE" | awk '{print $1}' | sed 's/://' ) 
+		while ! grep -A $fields "TRACK $TRACKNUMBER" "$CUE" |
+			grep -v "TRACK $TRACKNUMBER" |
+			grep TRACK > /dev/null &&
+			[ $( expr $( cat "$CUE" | wc -l ) - $line ) -gt $fields ]
+		do
+			fields=$( expr $fields + 1 )
+		done
+		# Gather per-track metadata
+		START=$( grep -A $fields "TRACK $TRACKNUMBER" "$CUE" |
+			grep "INDEX 01" |
+			sed -e 's/.*INDEX\s01\s\([0-9]{2}\.[0-9]{2}\.[0-9]{2}\).$/\1/' -e 's/:/./2' )
+		if [ -n "$pregap" ] || [ $TRACKNUMBER -eq 01 ] &&
+			grep -A $fields "TRACK $TRACKNUMBER" "$CUE" |
+			grep "INDEX 00" > /dev/null
+		then
+			START=$( grep -A $fields "TRACK $TRACKNUMBER" "$CUE" |
+				grep "INDEX 00" |
+				sed -e 's/.*INDEX\s00\s\([0-9]{2}\.[0-9]{2}\.[0-9]{2}\).$/\1/' -e 's/:/./2' )
+		fi
+		TITLE=$( grep -A $fields "TRACK $TRACKNUMBER" "$CUE" |
+			grep TITLE |
+			sed 's/^.*TITLE\s\"\(.*\)\".$/\1/' )
+		PERFORMER=$( grep -A $fields "TRACK $TRACKNUMBER" "$CUE" |
+			grep PERFORMER |
+			sed 's/^.*PERFORMER\s\"\(.*\)\".$/\1/' )
+		SONGWRITER=$( grep -A $fields "TRACK $TRACKNUMBER" "$CUE" |
+			grep SONGWRITER |
+			sed 's/^.*SONGWRITER\s\"\(.*\)\".$/\1/' )
+		# Set the tags and file names
+		if [ -n "$TITLE" ]; then
+			TAGS="$TAGS --tag=TITLE=\"$TITLE\""
+		fi
+		if [ -n "$SONGWRITER" ]; then
+			TAGS="$TAGS --tag=\"ARTIST=\"$SONGWRITER\""
+			if [ -n "$PERFORMER" ]; then
+				TAGS="$TAGS --tag=PERFORMER=\"$PERFORMER\""
+			fi
+		elif [ -n "$PERFORMER" ]; then
+			TAGS="$TAGS --tag=ARTIST=\"$PERFORMER\""
+		fi
+		for FIELD in "ALBUM" "GENRE" "DATE"; do
+			if [ -n "${!FIELD}" ]; then
+				TAGS="$TAGS --tag=$FIELD=\"${!FIELD}\""
+			fi
+		done
+		TAGS="$TAGS --tag=TRACKNUMBER=$TRACKNUMBER"
+		TAGS="$TAGS --tag=TRACKTOTAL=$TRACKTOTAL"
+		if [ -a "$COVER" ]; then
+			TAGS="$TAGS --picture=\"$COVER\""
+		fi
+		if [ -n "$TITLE" ]; then
+			NAME="$TRACKNUMBER - $TITLE.flac"
+		else
+			NAME="TRACK $TRACKNUMBER.flac"
+		fi
+		if [ -a "$NAME" ] && [ -z "$force" ]; then
+			echo "$name: Exsisting file will not be recreated: \"$NAME\""
+		fi
+		NAME=\"$NAME\"
+		# The end point for each track is contained in the next track's metadata
+		if [ $TRACKNUMBER -ne $TRACKTOTAL ]; then
+			TRACKNUMBER=$( expr $TRACKNUMBER + 1 )
+			if [ $TRACKNUMBER -ge 1 ] && [ $TRACKNUMBER -le 9 ]; then
+				TRACKNUMBER=0$TRACKNUMBER;
+			fi
+			fields=0
+			line=$( grep -n "TRACK $TRACKNUMBER" "$CUE" | awk '{print $1}' | sed 's/://' ) 
+			while ! grep -A $fields "TRACK $TRACKNUMBER" "$CUE" |
+				grep -v "TRACK $TRACKNUMBER" |
+				grep TRACK > /dev/null &&
+				[ $( expr $( cat "$CUE" | wc -l ) - $line ) -gt $fields ]
+			do
+				fields=$( expr $fields + 1 )
+			done
+			END=$( grep -A $fields "TRACK $TRACKNUMBER" "$CUE" |
+				grep "INDEX 01" |
+				sed -e 's/.*INDEX\s01\s\(........\).$/\1/' -e 's/:/./2' )
+			if [ -n "$pregap" ] &&
+				grep -A $fields "TRACK $TRACKNUMBER" "$CUE" |
+				grep "INDEX 00" > /dev/null
+			then
+				END=$( grep -A $fields "TRACK $TRACKNUMBER" "$CUE" |
+					grep "INDEX 00" |
+					sed -e 's/.*INDEX\s00\s\(........\).$/\1/' -e 's/:/./2' )
+			fi
+			# Create the files
+			flac -c -d --totally-silent --skip=$START --until=$END "$FILE" |
+			eval flac --totally-silent $OPTS $TAGS -o $NAME - &
+		else
+			flac -c -d --totally-silent --skip=$START "$FILE" |
+			eval flac --totally-silent $OPTS $TAGS -o $NAME - 
+		fi
+	done
+	S=$?
+}
+usage(){ # the --help text
+echo "Usage: $name [options] <file>
+
+Use a cue file to produce tagged flac tracks from
+a lossless audio file.
+
+Options:
+ -h, --help	display this help and exit
+ -g, --pregap	prepend pregaps, rather than appending
+		 them to the previous track
+ -f, --force	overwrite existing files, rather than
+ 		 skipping them
+ -0 ... -8	set the compression level; default is 5
+ --picture=file	select an image to tag the tracks with
+"
+}
+guess(){ # Try to find an audio file if the one in the cue doesn't exist
+	oldIFS=$IFS && IFS=$(echo -en "\n\b")
+	files=$(find . -maxdepth 1 -iregex ".*\.\(flac\|wav\|aiff\|raw\|oga\|ogg\)")
+	# if there's only one audio file in the directory, assume it's the right one
+	if [ $( echo "$files" | wc -l ) -eq 1 ]; then
+		echo $files | sed 's/.*\///'
+	# if not, see if there's an audio file whose name is contained within the directory name
+	else
+		count=0
+		for file in "$files"; do
+			if pwd | sed 's/.*\///' |
+				grep $( echo file | sed 's/\(.*\/\)*\(.*\)\.....\?/\2/' )
+			then
+				count=$( expr $count + 1 )
+				match=$file
+			fi
+		done
+		if [ $count -eq 1 ]; then
+			echo $match | sed 's/.*\///'
+		fi
+	fi
+	IFS=$oldIFS
+}
+name=$( echo $0 | sed 's/.*\///' ); S=1
+# Check for options that have been enabled
+if [ $# -eq 0 ]; then
+	usage & exit 1
+fi
+while [ $# -gt 0 ]; do
+	case $1 in
+		-h | --help	)	usage & exit;;
+		-g | --pregap )	pregap=0; shift;;
+		-f | --force )	OPTS="$OPTS -f" & force=0; shift;;
+		-0 | -1 | -2 | -3 | -4 | -5 | -6 | -7 | -8 ) OPTS="$OPTS $1"; shift;;
+		--picture=* )	COVER=$( echo $1 | sed 's/--picture=//' ); shift;;
+		*)				CUE="$1"; shift;;
+	esac
+done
+# Make sure that the remaining parameter is a cue file and that we can find the
+# corrosponding audio file before passing it to the main function
+cue=${CUE,,}
+if [ -z $CUE ]; then
+	>&2 echo "$name: No cue file specified."
+	exit 1
+elif [ "$cue" != "${cue%.cue}" ]; then
+	FILE=$( grep FILE "$CUE" | grep -o \".*\" | sed 's/^"\(.*\)"$/\1/' )
+	if ! [ -a "$FILE" ]; then
+		echo "$name: Could not find the audio file in the cue: $FILE"
+		FILE=$(guess)
+		if [ -a "$FILE" ]; then
+			echo "$name: Using $FILE instead."
+		fi
+	fi
+	if [ -a "$FILE" ]; then
+		main
+	else
+		exit 1
+	fi
+else
+	>&2 echo "$name: \"$CUE\" is neither a cue file nor a valid option."
+	exit 1
+fi
+eval exit $S
