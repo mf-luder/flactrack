@@ -152,7 +152,7 @@ main(){
 	S=$?
 }
 usage(){ # the --help text
-echo "Usage: $name [options] <file>
+echo "Usage: $name [options] <file.cue>
 
 Use a cue file to produce tagged flac tracks from
 a lossless audio file.
