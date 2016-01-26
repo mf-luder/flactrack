@@ -16,7 +16,6 @@
 # This script is designed to split single-file flac albums into tagged tracks.
 
 main(){
-	echo START
 	# Gather the metadata that's the same for all of the tracks
 	ALBUM=$( cat "$CUE" |
 		sed '/TRACK/q' |
