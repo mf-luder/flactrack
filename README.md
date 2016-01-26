@@ -9,4 +9,5 @@ Created tracks are tagged with metadata from the cue file and a cover image. If 
 The cover image must be called "cover.*", "folder.*", "front.*", or the hidden equivalent (prepended with a dot). The format can be jpg or png. If there are multiple matches, jpg is preferred over png. Within each format, the most explicit name ("cover")  is the most preferred and the least explicit ("front") is the least preferred. Alternatively, you can specify an image to use on the command line with "--picture=file.jpg".
 
 INSTALLATION: chmod +x flactrack && sudo mv flactrack /usr/local/bin/
+
 UNINSTALLATION: sudo rm /usr/local/bin/flactrack
