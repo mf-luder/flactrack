@@ -226,7 +226,11 @@ if [ -z $CUE ]; then
 	exit 1
 elif [ "$cue" != "${cue%.cue}" ]; then
 	FILE=$( grep FILE "$CUE" | grep -o \".*\" | sed 's/^"\(.*\)"$/\1/' )
-	if ! [ -a "$FILE" ]; then
+	if [ $( echo "$FILE" | wc -l ) -gt 1 ]; then
+		echo "$name: Multiple audio files are listed in the cue.
+  The album has probably already been split into tracks."
+  		exit
+	elif ! [ -a "$FILE" ]; then
 		echo "$name: Could not find the audio file in the cue: $FILE"
 		FILE=$(guess)
 		if [ -a "$FILE" ]; then
