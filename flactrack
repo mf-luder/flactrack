@@ -191,7 +191,8 @@ Options:
  -f, --force	overwrite existing files, rather than
  		 skipping them
  -0 ... -8	set the compression level; default is 5
- --picture=file	select an image to tag the tracks with
+ --image=<file>	select an image to tag the tracks with
+ -i <file>		short for --image
 "
 }
 guess(){ # Try to find an audio file if the one in the cue doesn't exist
@@ -225,11 +226,12 @@ fi
 while [ $# -gt 0 ]; do
 	case $1 in
 		-h | --help )	usage & exit;;
-		-g | --pregap )	pregap=0; shift;;
+		-p | --pregap )	pregap=0; shift;;
 		-f | --force )	OPTS="$OPTS -f" ; force=0; shift;;
 		-0 | -1 | -2 | -3 | -4 | -5 | -6 | -7 | -8 ) OPTS="$OPTS $1"; shift;;
-		--picture= )	COVER=0; shift;;
-		--picture=* )	COVER=$( echo $1 | sed -e 's/--picture=//' -e "s/^~\//\/home\/$USER\//" ); shift;;
+		--image=* )	COVER=$( echo $1 | sed -e 's/--picture=//' -e "s/^~\//\/home\/$USER\//" ); shift;;
+		-i )			COVER=$( echo $2 | sed "s/^~\//\/home\/$USER\//" ); shift; shift;;
+		--image= )		COVER=0; shift;;
 		*)				CUE="$1"; shift;;
 	esac
 done
@@ -238,7 +240,7 @@ done
 if [ -z "$CUE" ]; then
 	>&2 echo "$name: No cue file specified."
 	exit 1
-elif echo $CUE | grep -i '\.cue$'; then
+elif echo $CUE | grep -i '\.cue$' > /dev/null; then
 	FILE=$( grep FILE "$CUE" | grep -o \".*\" | sed 's/^"\(.*\)"$/\1/' )
 	if [ $( echo "$FILE" | wc -l ) -gt 1 ]; then
 		echo -e "$name: Multiple audio files are listed in the cue.\n"\
