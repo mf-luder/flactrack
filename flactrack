@@ -192,7 +192,7 @@ Options:
  		 skipping them
  -0 ... -8	set the compression level; default is 5
  --image=<file>	select an image to tag the tracks with
- -i <file>		short for --image
+ -i <file>	short for --image
 "
 }
 guess(){ # Try to find an audio file if the one in the cue doesn't exist
