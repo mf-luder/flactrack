@@ -1,6 +1,6 @@
 # flactrack
 A shell script for splitting a lossless single-file album into tagged flac tracks using the cue.
-It uses only the command line FLAC encoder/decoder and standard utilities, and is meant to be portable.
+It uses only the command line FLAC encoder/decoder and standard utilities, and is meant to be portable and robust.
 
 The sript expects one cue file as a command line argument. The name of the matching audio file is read from the cue. If the audio file has been renamed and the cue file has not been updated accordingly, the script will attempt to guess at which audio file is the right one by seeing if there's only one audio file in the directory or if one of the audio files in the directory has a name that is within the directory name. If the script can't find the matching audio file, simply edit the TITLE line of the cue file that appears somewhere above the first TRACK line so that the cue file contains the correct file name.
 
