@@ -35,27 +35,27 @@ main(){
 		tail -n1 |
 		sed 's/.*\([1-9]{2}\).*/\1/' )
 	# Try to find a cover image if one was not specified. Look for jpg first, then png.
-	oldIFS=$IFS && IFS=$(echo -en "\n\b")
-	if [ ! -f "$COVER" ] && [ "$COVER" != 0 ]; then
+	oldIFS=$IFS ; IFS=$(printf '\n\b')
+	if [ ! -f "$COVER" ] && [ "$COVER" != "0" ]; then
 		for IMAGE in $( find . -maxdepth 2 \( -iname \*.jpg -o -iname \*.jpeg \) ); do
-		    image=$( echo $IMAGE | tr A-Z a-z | sed 's/.*\/\(.*\)\.jpe\?g/\1/' )
-		    if [ "$image" == "cover" ] || [ "$image" == ".cover" ]; then
+		    image=$( printf "$IMAGE" | tr A-Z a-z | sed 's/.*\/\(.*\)\.jpe\?g/\1/' )
+		    if [ "$image" = "cover" ] || [ "$image" = ".cover" ]; then
 				COVER=$IMAGE; break
-			elif [ "$image" == "folder" ] || [ "$image" == ".folder" ]; then
+			elif [ "$image" = "folder" ] || [ "$image" = ".folder" ]; then
 				COVER=$IMAGE; break
-			elif [ "$image" == "front" ] || [ "$image" == ".front" ]; then
+			elif [ "$image" = "front" ] || [ "$image" = ".front" ]; then
 				COVER=$IMAGE; break
 		    fi
 		done
 	fi
 	if [ ! -f "$COVER" ] && [ "$COVER" != 0 ]; then
 		for IMAGE in $(find . -maxdepth 2 -iname *.png); do
-	    	image=$( echo $IMAGE | tr A-Z a-z | sed 's/.*\/\(.*\)\.png/\1/' )
-		    if [ "$image" == "cover" ] || [ "$image" == ".cover" ]; then
+	    	image=$( printf "$IMAGE" | tr A-Z a-z | sed 's/.*\/\(.*\)\.png/\1/' )
+		    if [ "$image" = "cover" ] || [ "$image" = ".cover" ]; then
 				COVER=$IMAGE; break
-			elif [ "$image" == "folder" ] || [ "$image" == ".folder" ]; then
+			elif [ "$image" = "folder" ] || [ "$image" = ".folder" ]; then
 				COVER=$IMAGE; break
-			elif [ "$image" == "front" ] || [ "$image" == ".front" ]; then
+			elif [ "$image" = "front" ] || [ "$image" = ".front" ]; then
 				COVER=$IMAGE; break
 		    fi
 		done
@@ -88,8 +88,8 @@ main(){
 				grep 'INDEX\s\s*00\s\s*[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}' |
 				sed -e 's/\s*INDEX\s\s*00\s\s*\([0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}\).*$/\1/' -e 's/:/./2' )
 		fi
-		if [ "$START" != "$( echo $START | grep '[0-9]\{2\}:[0-9]\{2\}\.[0-9]\{2\}' )" ]; then
-			>&2 echo "$name: Missing or malformed initial index for track $TRACKNUMBER"
+		if [ "$START" != "$( printf "$START" | grep '^[0-9]\{2\}:[0-9]\{2\}\.[0-9]\{2\}$' )" ]; then
+			>&2 printf '%s\n' "$name: Missing or malformed initial index for track $TRACKNUMBER"
 		fi
 		TITLE=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 			grep TITLE |
@@ -132,7 +132,7 @@ main(){
 			NAME="TRACK $TRACKNUMBER.flac"
 		fi
 		if [ -f "$NAME" ] && [ -z "$force" ]; then
-			echo "$name: Exsisting file will not be recreated: \"$NAME\""
+			printf '%s\n' "$name: Exsisting file will not be recreated: \"$NAME\""
 		fi
 		NAME=\"$NAME\"
 		# The end point for each track is contained in the next track's metadata
@@ -179,7 +179,7 @@ main(){
 	done
 }
 usage(){ # the --help text
-echo "Usage: $name [options] <file.cue>
+printf "Usage: $name [options] <file.cue>
 
 Use a cue file to produce tagged flac tracks from
 a lossless audio file.
@@ -196,29 +196,29 @@ Options:
 "
 }
 guess(){ # Try to find an audio file if the one in the cue doesn't exist
-	oldIFS=$IFS && IFS=$(echo -en "\n\b")
+	oldIFS=$IFS && IFS=$(printf '\n\b')
 	files=$(find . -maxdepth 1 -iregex ".*\.\(flac\|wav\|aiff\|raw\|oga\|ogg\)")
 	# if there's only one audio file in the directory, assume it's the right one
-	if [ $( echo "$files" | wc -l ) -eq 1 ]; then
-		echo $files | sed 's/.*\///'
+	if [ $( printf "$files" | wc -l ) -eq 1 ]; then
+		printf "$files" | sed 's/.*\///'
 	# if not, see if there's an audio file whose name is contained within the directory name
 	else
 		count=0
 		for file in "$files"; do
 			if pwd | sed 's/.*\///' |
-				grep $( echo file | sed 's/\(.*\/\)*\(.*\)\.....\?/\2/' )
+				grep $( printf "$file" | sed 's/\(.*\/\)*\(.*\)\.....\?/\2/' )
 			then
 				count=$( expr $count + 1 )
 				match=$file
 			fi
 		done
 		if [ $count -eq 1 ]; then
-			echo $match | sed 's/.*\///'
+			printf "$match" | sed 's/.*\///'
 		fi
 	fi
 	IFS=$oldIFS
 }
-name=$( echo $0 | sed 's/.*\///' )
+name=$( printf "$0" | sed 's/.*\///' )
 # Check for options that have been enabled
 if [ $# -eq 0 ]; then
 	usage & exit 1
@@ -229,8 +229,8 @@ while [ $# -gt 0 ]; do
 		-p | --pregap )	pregap=0; shift;;
 		-f | --force )	OPTS="$OPTS -f" ; force=0; shift;;
 		-0 | -1 | -2 | -3 | -4 | -5 | -6 | -7 | -8 ) OPTS="$OPTS $1"; shift;;
-		--image=* )	COVER=$( echo $1 | sed -e 's/--picture=//' -e "s/^~\//\/home\/$USER\//" ); shift;;
-		-i )			COVER=$( echo $2 | sed "s/^~\//\/home\/$USER\//" ); shift; shift;;
+		--image=* )	COVER=$( printf "$1" | sed -e 's/--picture=//' -e "s/^~\//\/home\/$USER\//" ); shift;;
+		-i )			COVER=$( printf "$2" | sed "s/^~\//\/home\/$USER\//" ); shift; shift;;
 		--image= )		COVER=0; shift;;
 		*)				CUE="$1"; shift;;
 	esac
@@ -238,19 +238,19 @@ done
 # Make sure that the remaining parameter is a cue file and that we can find the
 # corrosponding audio file before passing it to the main function
 if [ -z "$CUE" ]; then
-	>&2 echo "$name: No cue file specified."
+	>&2 printf '%s\n' "$name: No cue file specified."
 	exit 1
-elif echo $CUE | grep -i '\.cue$' > /dev/null; then
+elif printf "$CUE" | grep -i '\.cue$' > /dev/null; then
 	FILE=$( grep FILE "$CUE" | grep -o \".*\" | sed 's/^"\(.*\)"$/\1/' )
-	if [ $( echo "$FILE" | wc -l ) -gt 1 ]; then
-		echo -e "$name: Multiple audio files are listed in the cue.\n"\
-		" The album has probably already been split into tracks."
+	if [ $( printf "$FILE" | wc -l ) -gt 1 ]; then
+		printf '%s\n' "$name: Multiple audio files are listed in the cue."
+		printf '%s\n' " The album has probably already been split into tracks."
   		exit
 	elif [ ! -f "$FILE" ]; then
-		echo "$name: Could not find the audio file in the cue: $FILE"
+		printf '%s\n' "$name: Could not find the audio file in the cue: $FILE"
 		FILE=$(guess)
 		if [ -f "$FILE" ]; then
-			echo "$name: Using $FILE instead."
+			printf '%s\n'  "$name: Using $FILE instead."
 		fi
 	fi
 	if [ -f "$FILE" ]; then
@@ -259,7 +259,7 @@ elif echo $CUE | grep -i '\.cue$' > /dev/null; then
 		exit 1
 	fi
 else
-	>&2 echo "$name: \"$CUE\" is neither a cue file nor a valid option."
+	>&2 printf '%s\n' "$name: \"$CUE\" is neither a cue file nor a valid option."
 	exit 1
 fi
 
