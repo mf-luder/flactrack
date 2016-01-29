@@ -27,8 +27,9 @@ In order for the script to find it automatically, the cover image must be called
 ### Installation, Updates, and Uninstallation
 Installing the script is as simple as downloading it, making it executable, and putting it in your path (for Linux I recommend /usr/local/bin/). Make sure that you also have the Xiph.org command line flac encoder/decoder program. For updates, repeat the installation process, overwriting the original file. To uninstall the script, simply delete the file.
 
-    chmod +x flactrack && sudo mv flactrack /usr/local/bin/
-
+    curl https://raw.githubusercontent.com/mf-luder/flactrack/master/flactrack -o ~/flactrack
+    chmod +x ~/flactrack && sudo mv ~/flactrack /usr/local/bin/flactrack
+    
     sudo rm /usr/local/bin/flactrack
 
 Right now the sript is still being tested and is changing frequently, so check back often for updates.
