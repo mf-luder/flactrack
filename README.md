@@ -31,4 +31,4 @@ Installing the script is as simple as downloading it, making it executable, and 
 
     sudo rm /usr/local/bin/flactrack
 
-I intend to write an .ebuild so that Gentoo users can recieve updates via their package manager. Check back soon for that.
+Right now the sript is still being tested and is changing frequently, so check back often for updates. I intend to write an .ebuild so that Gentoo users can recieve updates via Portage. Check back soon for that.
