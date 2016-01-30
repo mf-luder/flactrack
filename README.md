@@ -1,6 +1,6 @@
 # flactrack
 
-Flactrack is a shell script for splitting a lossless single-file album into tagged flac tracks using a cue file. It uses only the command line flac encoder/decoder and standard utilities, and is meant to be portable and robust. It supports the set of audio formats that the flac encoder supports as input.
+Flactrack is a shell script for splitting a lossless single-file album into tagged flac tracks using a cue file. It uses only the command line flac encoder/decoder and standard utilities, and is meant to be portable and robust. It supports the same set of audio formats that the flac encoder supports as input.
 
 ## Usage
 
@@ -22,7 +22,7 @@ In order for the script to find it automatically, the cover image must be called
      -0 ... -8      set the compression level; default is 5  
      --image=<file> select an image to tag the tracks with  
      -i <file>      short for --image  
-NOTE: Strings of short options are not supported. Options must be declared seperately.
+Strings of short options are not supported. Options must be declared seperately.
 
 ### Installation, Updates, and Uninstallation
 Installing the script is as simple as downloading it, making it executable, and putting it in your path (for Linux I recommend /usr/local/bin/). Make sure that you also have the Xiph.org command line flac encoder/decoder program. For updates, repeat the installation process, overwriting the original file. To uninstall the script, simply delete the file.
