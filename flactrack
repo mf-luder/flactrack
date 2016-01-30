@@ -202,11 +202,11 @@ guess(){ # Try to find an audio file if the one in the cue doesn't exist
 	if [ $( printf "$files" | wc -l ) -eq 1 ]; then
 		printf "$files" | sed 's/.*\///'
 	# if not, see if there's an audio file whose name is contained within the directory name
-	else
+	elif [ $( printf "$files" | wc -l ) -gt 1 ]; then
 		count=0
 		for file in "$files"; do
 			if pwd | sed 's/.*\///' |
-				grep $( printf "$file" | sed 's/\(.*\/\)*\(.*\)\.....\?/\2/' )
+				grep "$( printf "$file" | sed 's/\(.*\/\)*\(.*\)\.....\?/\2/' )"
 			then
 				count=$( expr $count + 1 )
 				match=$file
