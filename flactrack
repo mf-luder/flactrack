@@ -61,12 +61,13 @@ main(){
 		done
 	fi
 	IFS=$oldIFS
+	# Loop over each track
 	for TRACKNUMBER in $(seq $TRACKTOTAL); do
 		TAGS=''; TITLE=''; PERFORMER=''; SONGWRITER='';
 		if [ $TRACKNUMBER -ge 1 ] && [ $TRACKNUMBER -le 9 ]; then
 			TRACKNUMBER=0$TRACKNUMBER
 		fi
-		# count the number of lines in the TRACK section of the cue file
+		# Count the number of lines in the TRACK section of the cue file
 		fields=0; line=$( grep -n "TRACK\s\s*$TRACKNUMBER" "$CUE" | awk '{print $1}' | sed 's/://' ) 
 		while ! grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 			grep -v "TRACK\s\s*$TRACKNUMBER" |
@@ -169,9 +170,11 @@ main(){
 			PIDS="$PIDS $!"
 		fi
 	done
+	# Remove a temporary file that may or may not have been created
 	if [ "$FILE" = ".tmp*.flac" ]; then
 		rm $FILE
 	fi
+	# Exit 1 if any of the encoding processes did not exit 0
 	for PID in $PIDS; do
 		wait $PID
 		if [ $? -ne 0 ]; then
@@ -197,32 +200,37 @@ Options:
 "
 }
 guess(){ # Try to find an audio file if the one in the cue doesn't exist
+	echo GUESS $FILE
 	oldIFS=$IFS && IFS=$(printf '\n\b')
 	files=$(find . -maxdepth 1 -iregex ".*\.\(flac\|wav\|w64\|aiff\?\|rf64\|raw\|oga\|ogg\)$")
 	# if there's only one audio file in the directory, assume it's the right one
 	if [ $( printf "$files" | wc -l ) -eq 1 ]; then
 		printf "$files" | sed 's/.*\///'
-	# if not, see if there's an audio file whose name is contained within the directory name
-	# or is shared with the cue file
+	# if not, see if there's exactly one audio file whose name is shared with the cue file
 	elif [ $( printf "$files" | wc -l ) -gt 1 ]; then
 		count=0; cuename="$( printf $CUE | sed 's/\(.*\/\)*\(.*\)\....$/\2/' )"
 		for file in "$files"; do
 			filename="$( printf "$file" | sed 's/\(.*\/\)*\(.*\)\.....\?$/\2/' )"
-			if [ "$filename" = "$cuename" ] || pwd | sed 's/.*\///' | grep "$filename" > /dev/null; then
+			if [ "$filename" = "$cuename" ]; then
 				count=$( expr $count + 1 ); match=$file
 			fi
 		done
 		if [ $count -eq 1 ]; then
 			printf "$match" | sed 's/.*\///'
+		# if there are multiple matches, see if one of them is a flac file
+#		else
+			
 		fi
 	fi
 	IFS=$oldIFS
 }
+# Discover the script's name for use in help and error messages
 name=$( printf "$0" | sed 's/.*\///' )
 # Make sure that flac is installed
-flac --version > /dev/null 2&>1
-||
-( printf '%s\n' "$name: flac does not seem to be installed. Aborting."; exit 1 )
+if ! flac --version > /dev/null 2>&1; then
+	printf '%s\n' "$name: flac does not seem to be installed. Aborting."
+	exit 1
+fi
 # Check for options that have been enabled
 if [ $# -eq 0 ]; then
 	usage & exit 1
@@ -253,11 +261,9 @@ elif printf "$CUE" | grep -i '\.cue$' > /dev/null; then
 		printf '%s\n' "$name: Multiple audio files are listed in the cue."
 		printf '%s\n' " The album has probably already been split into tracks."
   		exit
-	elif ; then
-		printf '%s\n' "$name: "
-		exit 1
 	elif [ ! -f "$FILE" ]; then
 		printf '%s\n' "$name: Could not find the audio file in the cue: $FILE"
+		guess
 		FILE=$(guess)
 		if [ -f "$FILE" ]; then
 			printf '%s\n'  "$name: Using $FILE instead."
@@ -269,9 +275,9 @@ elif printf "$CUE" | grep -i '\.cue$' > /dev/null; then
 			while [ -f .$tmp.flac ]; do
 				tmp="tmp-$tmps"; tmps=$( expr $tmps + 1 )
 			done
-			( flac --totally-silent -0 -o .$tmp.flac $FILE && FILE=.$tmp.flac )
-			||
-			( printf '%s\n' "$name: Format not supported by the flac encoder: $FILE" ; exit 1 )
+			if ! flac --totally-silent -0 -o .$tmp.flac $FILE && FILE=.$tmp.flac; then
+				printf '%s\n' "$name: Format not supported by the flac encoder: $FILE" ; exit 1
+			fi
 		fi
 		main
 	else
