@@ -267,20 +267,19 @@ elif printf "$CUE" | grep -i '\.cue$' > /dev/null; then
 		printf '%s\n' " The album has probably already been split into tracks."
   		exit
 	elif [ ! -f "$FILE" ]; then
-		printf '%s\n' "$name: Could not find the audio file in the cue: $FILE"
-		guess
+		printf '%s\n' "$name: Could not find the audio file in the cue: \"$FILE\""
 		FILE=$(guess)
 		if [ -f "$FILE" ]; then
-			printf '%s\n'  "$name: Using $FILE instead."
+			printf '%s\n'  "$name: Using \"$FILE\" instead."
 		fi
 	fi
 	if [ -f "$FILE" ]; then
-		if ! printf $FILE | grep "\.flac$" > /dev/null; then
+		if ! printf "$FILE" | grep "\.flac$" > /dev/null; then
 			tmp="tmp"; tmps=0
 			while [ -f .$tmp.flac ]; do
 				tmp="tmp-$tmps"; tmps=$( expr $tmps + 1 )
 			done
-			if ! flac --totally-silent -0 -o .$tmp.flac $FILE && FILE=.$tmp.flac; then
+			if ! ( flac --totally-silent -0 -o .$tmp.flac $FILE && FILE=.$tmp.flac ); then
 				printf '%s\n' "$name: Format not supported by the flac encoder: $FILE" ; exit 1
 			fi
 		fi
