@@ -212,8 +212,7 @@ guess(){ # Try to find an audio file if the one in the cue doesn't exist
 		cuename="$( printf $CUE | sed 's/\(.*\/\)*\(.*\)\....$/\2/' )"
 		count=0
 		for file in "$files"; do
-			filename="$( printf "$file" | sed 's/\(.*\/\)*\(.*\)\.....\?$/\2/' )"
-			if [ "$filename" = "$cuename" ]; then
+			if [ "$( printf $file | sed 's/\(.*\/\)*\(.*\)\.....\?$/\2/' )" = "$cuename" ]; then
 				match=$file
 				count=$(expr $count + 1)
 			fi
@@ -273,16 +272,16 @@ elif printf "$CUE" | grep -i '\.cue$' > /dev/null; then
 			printf '%s\n'  "$name: Using \"$FILE\" instead."
 		fi
 	fi
-	if [ -f "$FILE" ]; then
-		if ! printf "$FILE" | grep "\.flac$" > /dev/null; then
-			tmp="tmp"; tmps=0
-			while [ -f .$tmp.flac ]; do
-				tmp="tmp-$tmps"; tmps=$( expr $tmps + 1 )
-			done
-			if ! ( flac --totally-silent -0 -o .$tmp.flac $FILE && FILE=.$tmp.flac ); then
-				printf '%s\n' "$name: Format not supported by the flac encoder: $FILE" ; exit 1
-			fi
+	if [ -f "$FILE" ] && ! printf "$FILE" | grep "\.flac$" > /dev/null; then
+		tmp="tmp"; tmps=0
+		while [ -f .$tmp.flac ]; do
+			tmp="tmp-$tmps"; tmps=$( expr $tmps + 1 )
+		done
+		if ! ( flac --totally-silent -0 -o .$tmp.flac $FILE && FILE=.$tmp.flac ); then
+			printf '%s\n' "$name: Format not supported by the flac encoder: $FILE" ; exit 1
 		fi
+	fi
+	if [ -f "$FILE" ]; then
 		main
 	else
 		exit 1
