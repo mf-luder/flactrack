@@ -197,16 +197,21 @@ Options:
 }
 guess(){ # Try to find an audio file if the one in the cue doesn't exist
 	oldIFS=$IFS && IFS=$(printf '\n\b')
-	files=$(find . -maxdepth 1 -iregex ".*\.\(flac\|wav\|aiff\|raw\|oga\|ogg\)")
+	files=$(find . -maxdepth 1 -iregex ".*\.\(flac\|wav\|w64\|aiff\?\|rf64\|raw\|oga\|ogg\)$")
 	# if there's only one audio file in the directory, assume it's the right one
 	if [ $( printf "$files" | wc -l ) -eq 1 ]; then
 		printf "$files" | sed 's/.*\///'
 	# if not, see if there's an audio file whose name is contained within the directory name
+	# or is shared with the cue file
 	elif [ $( printf "$files" | wc -l ) -gt 1 ]; then
 		count=0
+		cuename="$( printf $CUE | sed 's/\(.*\/\)*\(.*\)\....$/\2/' )"
 		for file in "$files"; do
-			if pwd | sed 's/.*\///' |
-				grep "$( printf "$file" | sed 's/\(.*\/\)*\(.*\)\.....\?/\2/' )"
+			filename="$( printf "$file" | sed 's/\(.*\/\)*\(.*\)\.....\?$/\2/' )"
+			if [ "$filename" = "$cuename" ] ||
+				pwd |
+				sed 's/.*\///' |
+				grep "$filename"
 			then
 				count=$( expr $count + 1 )
 				match=$file
