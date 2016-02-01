@@ -23,7 +23,7 @@ In order for the script to find it automatically, the cover image must be called
      -0 ... -8      set the compression level; default is 5  
      --image=<file> select an image to tag the tracks with  
      -i <file>      short for --image  
-Strings of short options are not supported. Options must be declared seperately.
+Options must be declared seperately. Strings of short options are not supported.
 
 ### Installation, Updates, and Uninstallation
 Installing the script is as simple as downloading it, making it executable, and putting it in your PATH. Make sure that you also have the Xiph.org command line flac encoder/decoder program. For updates, repeat the installation process, overwriting the original file. To uninstall the script, simply delete the file.
