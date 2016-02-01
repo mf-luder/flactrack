@@ -30,6 +30,8 @@ Installing the script is as simple as downloading it, making it executable, and 
 
     # Download:  
     curl https://raw.githubusercontent.com/mf-luder/flactrack/master/flactrack -o ~/flactrack
+    # or
+    wget https://raw.githubusercontent.com/mf-luder/flactrack/master/flactrack -O ~/flactrack
     
     # Install:
     chmod +x ~/flactrack && sudo mv ~/flactrack /usr/local/bin/flactrack
