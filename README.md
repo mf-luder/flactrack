@@ -26,7 +26,7 @@ In order for the script to find it automatically, the cover image must be called
 Strings of short options are not supported. Options must be declared seperately.
 
 ### Installation, Updates, and Uninstallation
-Installing the script is as simple as downloading it, making it executable, and putting it in your path (for Linux I recommend /usr/local/bin/). Make sure that you also have the Xiph.org command line flac encoder/decoder program. For updates, repeat the installation process, overwriting the original file. To uninstall the script, simply delete the file.
+Installing the script is as simple as downloading it, making it executable, and putting it in your PATH. Make sure that you also have the Xiph.org command line flac encoder/decoder program. For updates, repeat the installation process, overwriting the original file. To uninstall the script, simply delete the file.
 
     # Download:  
     curl https://raw.githubusercontent.com/mf-luder/flactrack/master/flactrack -o ~/flactrack
