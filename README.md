@@ -32,5 +32,3 @@ Installing the script is as simple as downloading it, making it executable, and 
     chmod +x ~/flactrack && sudo mv ~/flactrack /usr/local/bin/flactrack
     
     sudo rm /usr/local/bin/flactrack
-
-Right now the sript is still being tested and is changing frequently, so check back often for updates.
