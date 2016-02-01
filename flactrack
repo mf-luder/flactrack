@@ -190,13 +190,13 @@ Options:
 guess(){ # Try to find an audio file if the one in the cue doesn't exist
 	oldIFS=$IFS && IFS=$(printf '\n\b')
 	# Find files with the same file extension as the file in the cue
-	ext=$( printf $FILE | sed 's/.*\.\(.*\)$/\1/' ); files=$(find . -maxdepth 1 -iregex ".*\.$ext$")
+	ext=$( printf $FILE | sed 's/.*\.\(.*\)$/\1/' ); files=$( find . -maxdepth 1 | grep -i ".*\.$ext$" )
 	# if there's exactly one, assume it's the right one
 	if [ $( printf "$files" | wc -l ) -eq 1 ]; then
 		printf "$files" | sed 's/.*\///'
 	# Otherwise, look for audio files with the same name as the cue file
 	else
-		files=$(find . -maxdepth 1 -iregex ".*\.\(flac\|wav\|w64\|raw\|rf64\|oga\|ogg\|aiff\?\)")
+		files=$( find . -maxdepth 1 | grep -i '.*\.\(flac\|wav\|w64\|raw\|rf64\|oga\|ogg\|aiff\?\)$' )
 		cuename="$( printf $CUE | sed 's/\(.*\/\)*\(.*\)\....$/\2/' )"
 		count=0
 		for file in "$files"; do
