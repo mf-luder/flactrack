@@ -30,7 +30,7 @@ Installing the script is as simple as downloading it, making it executable, and 
 
     # Download:  
     curl https://raw.githubusercontent.com/mf-luder/flactrack/master/flactrack -o ~/flactrack
-    # or
+    # or, alternatively:
     wget https://raw.githubusercontent.com/mf-luder/flactrack/master/flactrack -O ~/flactrack
     
     # Install:
