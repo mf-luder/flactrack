@@ -26,24 +26,14 @@ main(){
 	oldIFS=$IFS ; IFS=$(printf '\n\b')
 	if [ ! -f "$COVER" ] && [ "$COVER" != "0" ]; then
 		for IMAGE in $( find . -maxdepth 2 \( -iname \*.jpg -o -iname \*.jpeg \) ); do
-		    image=$( printf "$IMAGE" | tr A-Z a-z | sed 's/.*\/\(.*\)\.jpe\?g/\1/' )
-		    if [ "$image" = "cover" ] || [ "$image" = ".cover" ]; then
-				COVER=$IMAGE; break
-			elif [ "$image" = "folder" ] || [ "$image" = ".folder" ]; then
-				COVER=$IMAGE; break
-			elif [ "$image" = "front" ] || [ "$image" = ".front" ]; then
+			if printf $IMAGE | grep '^\(.*\/\)\?\.\?\(cover\|folder\|front\)\.jpe\?g$' > /dev/null; then
 				COVER=$IMAGE; break
 		    fi
 		done
 	fi
 	if [ ! -f "$COVER" ] && [ "$COVER" != 0 ]; then
 		for IMAGE in $(find . -maxdepth 2 -iname *.png); do
-	    	image=$( printf "$IMAGE" | tr A-Z a-z | sed 's/.*\/\(.*\)\.png/\1/' )
-		    if [ "$image" = "cover" ] || [ "$image" = ".cover" ]; then
-				COVER=$IMAGE; break
-			elif [ "$image" = "folder" ] || [ "$image" = ".folder" ]; then
-				COVER=$IMAGE; break
-			elif [ "$image" = "front" ] || [ "$image" = ".front" ]; then
+			if printf $IMAGE | grep '^\(.*\/\)\?\.\?\(cover\|folder\|front\)\.png$' > /dev/null; then
 				COVER=$IMAGE; break
 		    fi
 		done
@@ -248,7 +238,7 @@ elif printf "$CUE" | grep -i '\.cue$' > /dev/null; then
 	if printf "$CUE" | grep '/' > /dev/null; then
 		cd $( printf "$CUE" | sed 's/\(.*\)\/.*/\1\//' )
 	fi
-	FILE=$( grep FILE "$CUE" | grep -o \".*\" | sed 's/^"\(.*\)"$/\1/' )
+	FILE=$( grep FILE "$CUE" | grep -o '\".*\"' | sed 's/^"\(.*\)"$/\1/' )
 	if [ $( printf "$FILE" | wc -l ) -gt 1 ]; then
 		printf '%s\n' "$name: Multiple audio files are listed in the cue."
 		printf '%s\n' " The album has probably already been split into tracks."
@@ -260,8 +250,8 @@ elif printf "$CUE" | grep -i '\.cue$' > /dev/null; then
 			printf '%s\n'  "$name: Using \"$FILE\" instead."
 		fi
 	fi
-	if [ -f "$FILE" ] && ! printf "$FILE" | grep "\.flac$" > /dev/null; then
-		tmp="tmp"; tmps=0
+	if [ -f "$FILE" ] && ! printf "$FILE" | grep '\.flac$' > /dev/null; then
+		tmp='tmp'; tmps=0
 		while [ -f .$tmp.flac ]; do
 			tmp="tmp-$tmps"; tmps=$(( $tmps + 1 ))
 		done
