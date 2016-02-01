@@ -26,14 +26,14 @@ main(){
 	oldIFS=$IFS ; IFS=$(printf '\n\b')
 	if [ ! -f "$COVER" ] && [ "$COVER" != "0" ]; then
 		for IMAGE in $( find . -maxdepth 2 \( -iname \*.jpg -o -iname \*.jpeg \) ); do
-			if printf $IMAGE | grep '^\(.*\/\)\?\.\?\(cover\|folder\|front\)\.jpe\?g$' > /dev/null; then
+			if printf $IMAGE | grep -i '^\(.*\/\)\?\.\?\(cover\|folder\|front\)\.jpe\?g$' > /dev/null; then
 				COVER=$IMAGE; break
 		    fi
 		done
 	fi
 	if [ ! -f "$COVER" ] && [ "$COVER" != 0 ]; then
 		for IMAGE in $(find . -maxdepth 2 -iname *.png); do
-			if printf $IMAGE | grep '^\(.*\/\)\?\.\?\(cover\|folder\|front\)\.png$' > /dev/null; then
+			if printf $IMAGE | grep -i '^\(.*\/\)\?\.\?\(cover\|folder\|front\)\.png$' > /dev/null; then
 				COVER=$IMAGE; break
 		    fi
 		done
@@ -46,7 +46,7 @@ main(){
 			TRACKNUMBER=0$TRACKNUMBER
 		fi
 		# Count the number of lines in the TRACK section of the cue file
-		fields=0; line=$( grep -n "TRACK\s\s*$TRACKNUMBER" "$CUE" | sed 's/\([0-9]*\).*/\1/' ) 
+		fields=0; line=$( grep -n "TRACK\s\s*$TRACKNUMBER" "$CUE" | sed -e 's/\([0-9]*\).*/\1/' -e 's/[^0-9]//g' )
 		while ! grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 			grep -v "TRACK\s\s*$TRACKNUMBER" |
 			grep TRACK > /dev/null &&
@@ -119,7 +119,7 @@ main(){
 				TRACKNUMBER=0$TRACKNUMBER;
 			fi
 			fields=0
-			line=$( grep -n "TRACK\s\s*$TRACKNUMBER" "$CUE" | sed 's/\([0-9]*\).*/\1/' ) 
+			line=$( grep -n "TRACK\s\s*$TRACKNUMBER" "$CUE" | sed -e 's/\([0-9]*\).*/\1/' -e 's/[^0-9]//g' )
 			while ! grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 				grep -v "TRACK\s\s*$TRACKNUMBER" |
 				grep TRACK > /dev/null &&
@@ -182,15 +182,15 @@ guess(){ # Try to find an audio file if the one in the cue doesn't exist
 	# Find files with the same file extension as the file in the cue
 	ext=$( printf $FILE | sed 's/.*\.\(.*\)$/\1/' ); files=$( find . -maxdepth 1 | grep -i ".*\.$ext$" )
 	# if there's exactly one, assume it's the right one
-	if [ $( printf "$files" | wc -l ) -eq 1 ]; then
+	if [ $( printf "$files" | wc -l | sed 's/[^0-9]//g' ) -eq 1 ]; then
 		printf "$files" | sed 's/.*\///'
 	# Otherwise, look for audio files with the same name as the cue file
 	else
 		files=$( find . -maxdepth 1 | grep -i '.*\.\(flac\|wav\|w64\|raw\|rf64\|oga\|ogg\|aiff\?\)$' )
-		cuename="$( printf $CUE | sed 's/\(.*\/\)*\(.*\)\....$/\2/' )"
+		cuename="$( printf $CUE | sed 's/\(.*\/\)\?\(.*\)\....$/\2/' )"
 		count=0
 		for file in "$files"; do
-			if [ "$( printf $file | sed 's/\(.*\/\)*\(.*\)\.....\?$/\2/' )" = "$cuename" ]; then
+			if printf $file | grep -i "\(.*\/\)\?$cuename\.....\?$" > /dev/null; then
 				match=$file
 				count=$(( $count + 1 ))
 			fi
