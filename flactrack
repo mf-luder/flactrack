@@ -17,23 +17,11 @@
 
 main(){
 	# Gather the metadata that's the same for all of the tracks
-	ALBUM=$( cat "$CUE" |
-		sed '/TRACK/q' |
-		grep TITLE |
-		grep -o \".*\" |
-		sed 's/^"\(.*\)"$/\1/' )  
-	GENRE=$( cat "$CUE" |
-		sed '/TRACK/q' |
-		grep "REM\sGENRE" |
-		sed 's/\s*REM\s\s*GENRE\s\s*\(.*\).$/\1/' )
-	DATE=$( cat "$CUE" |
-		sed '/TRACK/q' |
-		grep "REM\s\s*DATE\|YEAR" |
-		sed 's/\s*REM\s\s*DATE\|YEAR\s\s*\(.*\).$/\1/' )
-	TRACKTOTAL=$( grep TRACK.*AUDIO "$CUE" |
-		awk '{print $2}' |
-		tail -n1 |
-		sed 's/.*\([1-9]{2}\).*/\1/' )
+	ALBUM=$( sed '/TRACK/q' "$CUE" | grep TITLE | grep -o '\".*\"' | sed 's/^"\(.*\)"$/\1/' )  
+	GENRE=$( sed '/TRACK/q' "$CUE" | grep 'REM\sGENRE' | sed 's/\s*REM\s\s*GENRE\s\s*\(.*\).$/\1/' )
+	DATE=$( sed '/TRACK/q' "$CUE" |	grep 'REM\s\s*DATE\|YEAR' |	sed 's/\s*REM\s\s*DATE\|YEAR\s\s*\(.*\).$/\1/' )
+	TRACKTOTAL=$( grep '^\s\s*TRACK\s\s*[0-9][0-9]\s\s*AUDIO' "$CUE" |
+		sed -e 's/.*TRACK\s\s*\([0-9][0-9]\).*/\1/g' -e '$!d' )
 	# Try to find a cover image if one was not specified. Look for jpg first, then png.
 	oldIFS=$IFS ; IFS=$(printf '\n\b')
 	if [ ! -f "$COVER" ] && [ "$COVER" != "0" ]; then
@@ -68,13 +56,13 @@ main(){
 			TRACKNUMBER=0$TRACKNUMBER
 		fi
 		# Count the number of lines in the TRACK section of the cue file
-		fields=0; line=$( grep -n "TRACK\s\s*$TRACKNUMBER" "$CUE" | awk '{print $1}' | sed 's/://' ) 
+		fields=0; line=$( grep -n "TRACK\s\s*$TRACKNUMBER" "$CUE" | sed 's/\([0-9]*\).*/\1/' ) 
 		while ! grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 			grep -v "TRACK\s\s*$TRACKNUMBER" |
 			grep TRACK > /dev/null &&
-			[ $( expr $( cat "$CUE" | wc -l ) - $line ) -gt $fields ]
+			[ $(( $( cat "$CUE" | wc -l ) - $line )) -gt $fields ]
 		do
-			fields=$( expr $fields + 1 )
+			fields=$(( $fields + 1 ))
 		done
 		# Gather per-track metadata
 		START=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
@@ -141,13 +129,13 @@ main(){
 				TRACKNUMBER=0$TRACKNUMBER;
 			fi
 			fields=0
-			line=$( grep -n "TRACK\s\s*$TRACKNUMBER" "$CUE" | awk '{print $1}' | sed 's/://' ) 
+			line=$( grep -n "TRACK\s\s*$TRACKNUMBER" "$CUE" | sed 's/\([0-9]*\).*/\1/' ) 
 			while ! grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 				grep -v "TRACK\s\s*$TRACKNUMBER" |
 				grep TRACK > /dev/null &&
-				[ $( expr $( cat "$CUE" | wc -l ) - $line ) -gt $fields ]
+				[ $(( $( cat "$CUE" | wc -l ) - $line )) -gt $fields ]
 			do
-				fields=$( expr $fields + 1 )
+				fields=$(( $fields + 1 ))
 			done
 			END=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 				grep "INDEX\s\s*01" |
@@ -214,7 +202,7 @@ guess(){ # Try to find an audio file if the one in the cue doesn't exist
 		for file in "$files"; do
 			if [ "$( printf $file | sed 's/\(.*\/\)*\(.*\)\.....\?$/\2/' )" = "$cuename" ]; then
 				match=$file
-				count=$(expr $count + 1)
+				count=$(( $count + 1 ))
 			fi
 		done
 		# If there is a file with the same name as the cue and the same file extension as the file in the cue,
@@ -275,7 +263,7 @@ elif printf "$CUE" | grep -i '\.cue$' > /dev/null; then
 	if [ -f "$FILE" ] && ! printf "$FILE" | grep "\.flac$" > /dev/null; then
 		tmp="tmp"; tmps=0
 		while [ -f .$tmp.flac ]; do
-			tmp="tmp-$tmps"; tmps=$( expr $tmps + 1 )
+			tmp="tmp-$tmps"; tmps=$(( $tmps + 1 ))
 		done
 		if ! ( flac --totally-silent -0 -o .$tmp.flac $FILE && FILE=.$tmp.flac ); then
 			printf '%s\n' "$name: Format not supported by the flac encoder: $FILE" ; exit 1
