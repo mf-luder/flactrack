@@ -28,7 +28,11 @@ Strings of short options are not supported. Options must be declared seperately.
 ### Installation, Updates, and Uninstallation
 Installing the script is as simple as downloading it, making it executable, and putting it in your path (for Linux I recommend /usr/local/bin/). Make sure that you also have the Xiph.org command line flac encoder/decoder program. For updates, repeat the installation process, overwriting the original file. To uninstall the script, simply delete the file.
 
+    # Download:  
     curl https://raw.githubusercontent.com/mf-luder/flactrack/master/flactrack -o ~/flactrack
+    
+    # Install:
     chmod +x ~/flactrack && sudo mv ~/flactrack /usr/local/bin/flactrack
     
+    # Remove:
     sudo rm /usr/local/bin/flactrack
