@@ -50,7 +50,7 @@ main(){
 		while ! grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 			grep -v "TRACK\s\s*$TRACKNUMBER" |
 			grep TRACK > /dev/null &&
-			[ $(( $( cat "$CUE" | wc -l ) - $line )) -gt $fields ]
+			[ $(( $( grep -c ^ "$CUE" ) - $line )) -gt $fields ]
 		do
 			fields=$(( $fields + 1 ))
 		done
@@ -123,7 +123,7 @@ main(){
 			while ! grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 				grep -v "TRACK\s\s*$TRACKNUMBER" |
 				grep TRACK > /dev/null &&
-				[ $(( $( cat "$CUE" | wc -l ) - $line )) -gt $fields ]
+				[ $(( $( grep -c ^ "$CUE" ) - $line )) -gt $fields ]
 			do
 				fields=$(( $fields + 1 ))
 			done
@@ -239,7 +239,7 @@ elif printf "$CUE" | grep -i '\.cue$' > /dev/null; then
 		cd $( printf "$CUE" | sed 's/\(.*\)\/.*/\1\//' )
 	fi
 	FILE=$( grep FILE "$CUE" | grep -o '\".*\"' | sed 's/^"\(.*\)"$/\1/' )
-	if [ $( printf "$FILE" | wc -l ) -gt 1 ]; then
+	if [ $( printf "$FILE" | wc -l | sed 's/[^0-9]//g' ) -gt 1 ]; then
 		printf '%s\n' "$name: Multiple audio files are listed in the cue."
 		printf '%s\n' " The album has probably already been split into tracks."
   		exit
