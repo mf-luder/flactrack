@@ -23,20 +23,22 @@ main(){
 	TRACKTOTAL=$( grep '^\s\s*TRACK\s\s*[0-9][0-9]\s\s*AUDIO' "$CUE" |
 		sed -e 's/.*TRACK\s\s*\([0-9][0-9]\).*/\1/g' -e '$!d' )
 	# Try to find a cover image if one was not specified. Look for jpg first, then png.
+	oldIFS=$IFS ; IFS=$(printf '\n\b')
 	if [ ! -f "$COVER" ] && [ "$COVER" != "0" ]; then
-		find -maxdepth 2 \( -iname \*.jpg -o -iname \*.jpeg \) | while read image; do
-			if printf $image | grep -i '^\(.*\/\)\?\.\?\(cover\|folder\|front\)\.jpe\?g$' > /dev/null; then
-				COVER=$image; break
+		for IMAGE in $( find . -maxdepth 2 \( -iname \*.jpg -o -iname \*.jpeg \) ); do
+			if printf $IMAGE | grep -i '^\(.*\/\)\?\.\?\(cover\|folder\|front\)\.jpe\?g$' > /dev/null; then
+				COVER=$IMAGE; break
 		    fi
 		done
 	fi
 	if [ ! -f "$COVER" ] && [ "$COVER" != 0 ]; then
-		find -maxdepth 2 -iname *png | while read image; do
-			if printf $image | grep -i '^\(.*\/\)\?\.\?\(cover\|folder\|front\)\.png$' > /dev/null; then
-				COVER=$image; break
+		for IMAGE in $(find . -maxdepth 2 -iname *.png); do
+			if printf $IMAGE | grep -i '^\(.*\/\)\?\.\?\(cover\|folder\|front\)\.png$' > /dev/null; then
+				COVER=$IMAGE; break
 		    fi
 		done
 	fi
+	IFS=$oldIFS
 	# Loop over each track
 	for TRACKNUMBER in $(seq $TRACKTOTAL); do
 		TAGS=''; TITLE=''; PERFORMER=''; SONGWRITER='';
