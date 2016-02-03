@@ -79,9 +79,7 @@ main(){
 			grep SONGWRITER |
 			sed 's/^.*SONGWRITER\s\s*\"\(.*\)\".$/\1/' )
 		# Set the tags and file names
-		if [ -n "$TITLE" ]; then
-			TAGS="$TAGS --tag=TITLE=\"$TITLE\""
-		fi
+		test -n "$TITLE" && TAGS="$TAGS --tag=TITLE=\"$TITLE\""
 		if [ -n "$SONGWRITER" ]; then
 			TAGS="$TAGS --tag=\"ARTIST=\"$SONGWRITER\""
 			if [ -n "$PERFORMER" ]; then
@@ -90,24 +88,12 @@ main(){
 		elif [ -n "$PERFORMER" ]; then
 			TAGS="$TAGS --tag=ARTIST=\"$PERFORMER\""
 		fi
-		if [ -n "$ALBUM" ]; then
-			TAGS="$TAGS --tag=ALBUM=\"$ALBUM\""
-		fi
-		if [ -n "$GENRE" ]; then
-			TAGS="$TAGS --tag=GENRE=\"$GENRE\""
-		fi
-		if [ -n "$DATE" ]; then
-			TAGS="$TAGS --tag=DATE=\"$DATE\""
-		fi
+		test -n "$ALBUM" && TAGS="$TAGS --tag=ALBUM=\"$ALBUM\""
+		test -n "$GENRE" && TAGS="$TAGS --tag=GENRE=\"$GENRE\""
+		test -n "$DATE"  && TAGS="$TAGS --tag=DATE=\"$DATE\""
 		TAGS="$TAGS --tag=TRACKNUMBER=$TRACKNUMBER --tag=TRACKTOTAL=$TRACKTOTAL"
-		if [ -f "$COVER" ]; then
-			TAGS="$TAGS --picture=\"$COVER\""
-		fi
-		if [ -n "$TITLE" ]; then
-			NAME="$TRACKNUMBER - $TITLE.flac"
-		else
-			NAME="TRACK $TRACKNUMBER.flac"
-		fi
+		test -f "$COVER" && TAGS="$TAGS --picture=\"$COVER\""
+		test -n "$TITLE" && NAME="$TRACKNUMBER - $TITLE.flac" || NAME="TRACK $TRACKNUMBER.flac"
 		if [ -f "$NAME" ] && [ -z "$force" ]; then
 			printf '%s\n' "$name: Exsisting file will not be recreated: \"$NAME\""
 		fi
@@ -191,8 +177,7 @@ guess(){ # Try to find an audio file if the one in the cue doesn't exist
 		count=0
 		for file in "$files"; do
 			if printf $file | grep -i "\(.*\/\)\?$cuename\.....\?$" > /dev/null; then
-				match=$file
-				count=$(( $count + 1 ))
+				match=$file; count=$(( $count + 1 ))
 			fi
 		done
 		# If there is a file with the same name as the cue and the same file extension as the file in the cue,
