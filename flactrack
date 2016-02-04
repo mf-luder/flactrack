@@ -135,7 +135,7 @@ main(){
 		fi
 	done
 	# Remove a temporary file that may or may not have been created
-	test "$FILE" = "/tmp/*.flac" && rm "$FILE"
+	printf "$FILE" | grep '/tmp/.*\.flac' > /dev/null && rm "$FILE"
 	# Exit 1 if any of the encoding processes did not exit 0
 	for PID in $PIDS; do
 		wait $PID
@@ -174,7 +174,7 @@ guess(){ # Try to find an audio file if the one in the cue doesn't exist or isn'
 		files=$( find . -maxdepth 1 | grep -i '.*\.\(flac\|wav\|w64\|raw\|rf64\|oga\|ogg\|aiff\?\)$' )
 		cuename="$( printf $CUE | sed 's/\(.*\/\)\?\(.*\)\.cue$/\2/I' )"
 		count=0
-		for file in "$files"; do
+		for file in $files; do
 			if printf $file | grep -i "\(.*\/\)\?$cuename\.....\?$" > /dev/null; then
 				match=$file; count=$(( $count + 1 ))
 			fi
@@ -192,8 +192,11 @@ guess(){ # Try to find an audio file if the one in the cue doesn't exist or isn'
 # Discover the script's name for use in help and error messages
 name=$( printf "$0" | sed 's/.*\///' )
 # Make sure that flac is installed and /dev/null exists
-test -e '/dev/null' || ( printf '%s\n' "$name: /dev/null not found. Aborting." & exit 1 )
-flac > /dev/null 2>&1 || ( printf '%s\n' "$name: flac does not seem to be installed. Aborting." & exit 1 )
+if [ ! -e '/dev/null' ]; then
+	printf '%s\n' "$name: /dev/null not found. Aborting." & exit 1
+elif ! flac > /dev/null 2>&1; then
+	printf '%s\n' "$name: flac does not seem to be installed. Aborting." & exit 1
+fi
 # Check for options that have been enabled
 if [ $# -eq 0 ]; then
 	usage & exit 1
@@ -212,14 +215,12 @@ while [ $# -gt 0 ]; do
 done
 # Make sure that the remaining parameter is a cue file
 if [ -z "$CUE" ]; then
-	>&2 printf '%s\n' "$name: No cue file specified." & exit 1
-elif ! printf "$CUE" | grep -i '\.cue$' > /dev/null; then
+	>&2 printf '%s\n' "$name: No cue file specified. See --help for usage." & exit 1
+elif [ ! -f "$CUE" ] || ! printf "$CUE" | grep -i '\.cue$' > /dev/null; then
 	>&2 printf '%s\n' "$name: \"$CUE\" is neither a cue file nor a valid option." & exit 1
 fi
 # Make sure we're in the same directory as the cue file
-if printf "$CUE" | grep '/' > /dev/null; then
-	cd $( printf "$CUE" | sed 's/\(.*\)\/.*/\1\//' )
-fi
+printf "$CUE" | grep '/' > /dev/null &&	cd "$( printf "$CUE" | sed 's/\(.*\)\/.*/\1\//' )"
 # Make sure that a single audio file is listed in the cue and that it exists, or look for an alternative
 FILE=$( grep 'FILE' "$CUE" | grep -o '\".*\"' | sed 's/^"\(.*\)"$/\1/' )
 if [ $( printf "$FILE" | wc -l | sed 's/[^0-9]//g' ) -gt 1 ]; then
@@ -227,10 +228,10 @@ if [ $( printf "$FILE" | wc -l | sed 's/[^0-9]//g' ) -gt 1 ]; then
 	printf '%s\n' " The album has probably already been split into tracks."
 	exit
 elif [ ! -f "$FILE" ]; then
-	printf '%s\n' "$name: Could not find the audio file in the cue: \"$FILE\""
+	printf '%s\n' "$name: Could not find the audio file in the cue sheet: \"$FILE\""
 	FILE=$(guess)
 	if [ -f "$FILE" ]; then
-		printf '%s\n'  "$name: Trying \"$FILE\" instead."
+		printf '%s\n'  "$name: Trying \"$FILE\" instead..."
 	fi
 fi
 # Make sure that the audio file is a flac file, and try to convert it or find a different one if it isn't
@@ -247,9 +248,9 @@ if [ -f "$FILE" ] && ! printf "$FILE" | grep -i '\.flac$' > /dev/null; then
 		fi
 	fi
 	if [ -f "$FILE" ]; then
-		printf '%s\n' "$name: Trying \"$FILE\" instead."
+		printf '%s\n' "$name: Trying \"$FILE\" instead..."
 		if ! printf "$FILE" | grep -i '\.flac$' > /dev/null; then
-			flac --totally-silent -0 -o "/tmp/$filename" "$FILE" && FILE="/tmp/$filename" ||
+			flac --totally-silent -0 -f -o "/tmp/$filename" "$FILE" && FILE="/tmp/$filename" ||
 			( >&2 printf '%s\n' "$name: File conversion failed." & exit 1 )
 		fi
 	fi
