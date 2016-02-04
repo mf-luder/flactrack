@@ -7,7 +7,7 @@ Flactrack is a shell script for splitting single-file albums into tagged flac tr
     flactrack [options] <file.cue>
 
 #### File Selection
-The sript expects one cue file as a command line argument. The name of the matching audio file is read from the cue. If that file cannot be found (perhaps because the audio file has been renamed and the cue file has not been updated accordingly), the script will attempt to guess at which audio file is the right one by seeing if there's only one audio file in the directory with the right file extension or if there's an audio file with the same name as the cue file. If the script can't find the matching audio file, simply edit the FILE line in the cue file with your favorite text editor so that it contains the correct file name.
+The sript expects one cue file as a command line argument. The name of the matching audio file is read from the cue. If that file cannot be found (perhaps because the audio file has been renamed and the cue file has not been updated accordingly), the script will look for an audio file that's likely to be the right one based on its name. If the script can't find the matching audio file, simply edit the FILE line in the cue file with your favorite text editor so that it contains the correct file name.
 
 #### Tagging
 Created tracks are tagged with metadata from the cue file and a cover image. If the metadata in the cue is incorrect or missing, the equivalent tags will be as well. You can change the content of the tags by editing the cue file before you run the script.
