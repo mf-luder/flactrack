@@ -220,7 +220,7 @@ elif [ ! -f "$CUE" ] || ! printf "$CUE" | grep -i '\.cue$' > /dev/null; then
 	>&2 printf '%s\n' "$name: \"$CUE\" is neither a cue file nor a valid option." & exit 1
 fi
 # Make sure we're in the same directory as the cue file
-printf "$CUE" | grep '/' > /dev/null &&	cd "$( printf "$CUE" | sed 's/\(.*\)\/.*/\1\//' )"
+printf "$CUE" | grep '/' > /dev/null && cd "$( printf "$CUE" | sed 's/\(.*\)\/.*/\1\//' )"
 # Make sure that a single audio file is listed in the cue and that it exists, or look for an alternative
 FILE=$( grep 'FILE' "$CUE" | grep -o '\".*\"' | sed 's/^"\(.*\)"$/\1/' )
 if [ $( printf "$FILE" | wc -l | sed 's/[^0-9]//g' ) -gt 1 ]; then
