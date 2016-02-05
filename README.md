@@ -29,7 +29,7 @@ Options must be declared seperately. Strings of short options are not supported.
 Flactrack does not have an option to remove the original file after splitting it into tracks. This behavior is very easy to produce using '&& rm':
 
     flactrack <file.cue> && rm <file.flac>
-This will remove \<file.flac\> only if all of the track files either already existed or were created succsessfully. If flactrack is run with the '-f' option, the file will be removed only if all of the tracks are created successfully.
+Because the script only exits with status 0 if all of the tracks are created successfully, this will remove \<file.flac\> only under that condition.
 
 ### Installation, Updates, and Uninstallation
 Installing the script is as simple as downloading it, making it executable, and putting it in your PATH. Make sure that you also have the Xiph.org command line flac encoder/decoder program. For updates, repeat the installation process, overwriting the original file. To uninstall the script, simply delete the file.
