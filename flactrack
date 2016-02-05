@@ -247,7 +247,7 @@ FILE=$( grep 'FILE' "$CUE" | grep -o '\".*\"' | sed 's/^"\(.*\)"$/\1/' )
 if [ $( printf "$FILE" | wc -l | sed 's/[^0-9]//g' ) -gt 1 ]; then
 	printf '%s\n' "$name: Multiple audio files are listed in the cue."
 	printf '%s\n' " The album has probably already been split into tracks."
-	exit
+	exit 1
 elif [ ! -f "$FILE" ]; then
 	printf '%s\n' "$name: Could not find the audio file in the cue sheet: \"$FILE\""
 	FILE=$(guess)
