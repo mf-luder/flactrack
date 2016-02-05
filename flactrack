@@ -93,7 +93,11 @@ main(){
 		test -n "$DATE"  && TAGS="$TAGS --tag=DATE=\"$DATE\""
 		TAGS="$TAGS --tag=TRACKNUMBER=$TRACKNUMBER --tag=TRACKTOTAL=$TRACKTOTAL"
 		test -f "$COVER" && TAGS="$TAGS --picture=\"$COVER\""
-		test -n "$TITLE" && NAME="$TRACKNUMBER - $TITLE.flac" || NAME="TRACK $TRACKNUMBER.flac"
+		if [ -n "$TITLE" ]; then
+			NAME="$TRACKNUMBER - $( printf "$TITLE" | sed 's/\//-/g' ).flac"
+		else
+			NAME="TRACK $TRACKNUMBER.flac"
+		fi
 		if [ -f "$NAME" ] && [ -z "$force" ]; then
 			printf '%s\n' "$name: Exsisting file will not be recreated: \"$NAME\""
 		fi
