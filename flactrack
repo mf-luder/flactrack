@@ -30,7 +30,7 @@ main(){
 		grep '^\s*REM\s\s*TOTALDISCS' |
 		sed 's/.*TOTALDISCS\s\s*\([0-9][0-9]*\).*/\1/' )
 	if [ -n "$TOTALDISCS" ] && [ $TOTALDISCS -gt 1 ]; then
-		DISCNUMBER=$( sed '/TRACK/q' |
+		DISCNUMBER=$( sed '/TRACK/q' "$CUE" |
 			grep '^\s*REM\s\s*DISCNUMBER' |
 			sed 's/.*DISCNUMBER\s\s*\([0-9][0-9]*\).*/\1/' )
 	fi
@@ -86,7 +86,11 @@ main(){
 			sed 's/^.*TITLE\s\s*\"\(.*\)\".$/\1/' )
 		PERFORMER=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 			grep PERFORMER |
-			sed 's/^.*PERFORMER\s\s*\"\(.*\)\".$/\1/' )
+			sed 's/^.*PERFORMER\s\s*\"\(.*\)\".$/\1/' ) ||
+		PERFORMER=$( sed '/TRACK/q' "$CUE" |
+			grep '^\s*PERFORMER' |
+			grep -o '\".*\"' |
+			sed 's/^\s*"\(.*\)"\s*$/\1/' )
 		SONGWRITER=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 			grep SONGWRITER |
 			sed 's/^.*SONGWRITER\s\s*\"\(.*\)\".$/\1/' )
