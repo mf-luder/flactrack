@@ -26,8 +26,16 @@ main(){
 		sed  -e 's/.*\(DATE\|YEAR\)\s\s*\([^\s\r]*\).*/\2/' -e 's/^\s*"\(.*\)"\s*$/\1/' )
 	TRACKTOTAL=$( grep '^\s\s*TRACK\s\s*[0-9][0-9]\s\s*AUDIO' "$CUE" |
 		sed -e 's/.*TRACK\s\s*\([0-9][0-9]\).*/\1/' -e '$!d' )
+	TOTALDISCS=$( sed '/TRACK/q' "$CUE" |
+		grep '^\s*REM\s\s*TOTALDISCS' |
+		sed 's/.*TOTALDISCS\s\s*\([0-9][0-9]*\).*/\1/' )
+	if [ -n "$TOTALDISCS" ] && [ $TOTALDISCS -gt 1 ]; then
+		DISCNUMBER=$( sed '/TRACK/q' |
+			grep '^\s*REM\s\s*DISCNUMBER' |
+			sed 's/.*DISCNUMBER\s\s*\([0-9][0-9]*\).*/\1/' )
+	fi
 	# Try to find a cover image if one was not specified. Look for jpg first, then png.
-	oldIFS=$IFS ; IFS=$(printf '\n\b')
+	oldIFS=$IFS; IFS=$(printf '\n\b')
 	if [ ! -f "$COVER" ] && [ "$COVER" != "0" ]; then
 		for IMAGE in $( find . -maxdepth 2 \( -iname \*.jpg -o -iname \*.jpeg \) ); do
 			if printf $IMAGE | grep -i '^\(.*\/\)\?\.\?\(cover\|folder\|front\)\.jpe\?g$' > /dev/null; then
@@ -93,9 +101,10 @@ main(){
 			TAGS="$TAGS --tag=ARTIST=\"$PERFORMER\""
 		fi
 		test -n "$ALBUM" && TAGS="$TAGS --tag=ALBUM=\"$ALBUM\""
-		test -n "$GENRE" && TAGS="$TAGS --tag=GENRE=\"$GENRE\""
+		test -n "$DISCNUMBER"  && TAGS="$TAGS --tag=DISCNUMBER=\"$DISCNUMBER\""
 		test -n "$DATE"  && TAGS="$TAGS --tag=DATE=\"$DATE\""
 		TAGS="$TAGS --tag=TRACKNUMBER=$TRACKNUMBER --tag=TRACKTOTAL=$TRACKTOTAL"
+		test -n "$GENRE" && TAGS="$TAGS --tag=GENRE=\"$GENRE\""
 		test -f "$COVER" && TAGS="$TAGS --picture=\"$COVER\""
 		if [ -n "$TITLE" ]; then
 			NAME="$TRACKNUMBER - $( printf "$TITLE" | sed 's/\//-/g' ).flac"
