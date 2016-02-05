@@ -45,4 +45,4 @@ Installing the script is as simple as downloading it, making it executable, and 
     # Remove:
     sudo rm /usr/local/bin/flactrack
 
-The script is currently unstable and under active development, so check back regularly for updates and feel free to report any issues.
+The script is currently unstable and under active development, so check back regularly for updates.
