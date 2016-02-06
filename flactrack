@@ -161,7 +161,7 @@ main(){
 		fi
 	done
 	# Remove a temporary file that may or may not have been created
-	printf "$FILE" | grep -q '/tmp/.*\.flac' && rm "$FILE"
+	test -n "$tempfile" && rm "$FILE"
 	# Exit 1 if any of the encoding processes did not exit 0
 	for PID in $PIDS; do
 		wait $PID
@@ -218,7 +218,7 @@ guess(){ # Try to find an audio file if the one in the cue doesn't exist or isn'
 # Discover the script's name for use in help and error messages
 name=$( printf "$0" | sed 's/.*\///' )
 # Make sure that flac is installed
-if [ -e '/dev/null' ] && ! flac > /dev/null 2>&1; then
+if [ -w '/dev/null' ] && ! flac > /dev/null 2>&1; then
 	printf '%s\n' "$name: flac does not seem to be installed. Aborting." & exit 1
 fi
 # Check for options that have been enabled
@@ -254,28 +254,26 @@ if [ $( printf "$FILE" | wc -l | sed 's/[^0-9]//g' ) -gt 1 ]; then
 elif [ ! -f "$FILE" ]; then
 	printf '%s\n' "$name: Could not find the audio file in the cue sheet: \"$FILE\""
 	FILE=$(guess)
-	if [ -f "$FILE" ]; then
-		printf '%s\n'  "$name: Trying \"$FILE\" instead..."
-	fi
+	test -f "$FILE" && printf '%s\n'  "$name: Trying \"$FILE\" instead..."
 fi
 # Make sure that the audio file is a flac file, and try to convert it or find a different one if it isn't
 if [ -f "$FILE" ] && ! printf "$FILE" | grep -iq '\.flac$'; then
-	if [ ! -d '/tmp' ]; then
-		>&2 printf '%s\n' "$name: Format conversion requires /tmp to exist." & exit 1
-	else
-		filename="$( printf "$FILE" | sed 's/\(.*\)\..*/\1/' ).flac"
-		if flac --totally-silent -0 -o "/tmp/$filename" "$FILE"; then
-			FILE="/tmp/$filename"
-		else
-			printf '%s\n' "$name: Format not supported by the flac encoder: \"$FILE\""
-			FILE=$(guess flac)
-		fi
+	filename="$( printf "$FILE" | sed 's/\(.*\)\..*/\1/' ).flac"
+	if [ -w '/tmp/' ]; then
+		filename="/tmp/$filename"; forcetemp='-f'
 	fi
-	if [ -f "$FILE" ]; then
-		printf '%s\n' "$name: Trying \"$FILE\" instead..."
-		if ! printf "$FILE" | grep -iq '\.flac$'; then
-			flac --totally-silent -0 -f -o "/tmp/$filename" "$FILE" && FILE="/tmp/$filename" ||
-			( >&2 printf '%s\n' "$name: File conversion failed." & exit 1 )
+	if flac --totally-silent -0 "$forcetemp" -o "$filename" "$FILE"; then
+		FILE="$filename"; tempfile=0
+	else
+		printf '%s\n' "$name: Format not supported by the flac encoder: \"$FILE\""
+		FILE="$(guess flac)"
+		test -f "$FILE" && printf '%s\n' "$name: Trying \"$FILE\" instead..."
+	fi
+	if [ -f "$FILE" ] && ! printf "$FILE" | grep -iq '\.flac$'; then
+		if flac --totally-silent -0 "$forcetemp" -o "$filename" "$FILE"; then
+			FILE="$filename"; tempfile=0
+		else
+			>&2 printf '%s\n' "$name: File conversion failed." & exit 1
 		fi
 	fi
 fi
