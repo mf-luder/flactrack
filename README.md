@@ -56,4 +56,5 @@ Installing the script is as simple as downloading it, making it executable, and 
     sudo rm /usr/local/bin/flactrack
 
 ##### Dependencies and Compatibility
-Besides the Xiph.org command line flac encoder/decoder program, flactrack relies almost exclusively on POSIX-defined shell syntax, files, variables, and utilities. Currently, the exceptions to this rule are the "-o" and "-A" options for grep and the "-maxdepth" and "-iname" options for find. If your grep and find have these options and your system is reasonably POSIX compliant, you should be able to run flactrack. 
+Besides the Xiph.org command line flac encoder/decoder program, flactrack relies almost exclusively on POSIX-defined shell syntax, files, variables, and utilities. Currently, the exceptions to this rule are the "-o" and "-A" options for grep and the  
+"-maxdepth" and "-iname" options for find. If your grep and find have these options and your system is reasonably POSIX compliant, you should be able to run flactrack. 
