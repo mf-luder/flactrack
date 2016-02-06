@@ -41,14 +41,14 @@ main(){
 	oldIFS=$IFS; IFS=$(printf '\n\b')
 	if [ ! -f "$COVER" ] && [ "$COVER" != "0" ]; then
 		for IMAGE in $( find . -maxdepth 2 \( -iname \*.jpg -o -iname \*.jpeg \) ); do
-			if printf $IMAGE | grep -i '^\(.*\/\)\?\.\?\(cover\|folder\|front\)\.jpe\?g$' > /dev/null; then
+			if printf $IMAGE | grep -iq '^\(.*\/\)\?\.\?\(cover\|folder\|front\)\.jpe\?g$'; then
 				COVER=$IMAGE; break
 		    fi
 		done
 	fi
 	if [ ! -f "$COVER" ] && [ "$COVER" != 0 ]; then
 		for IMAGE in $(find . -maxdepth 2 -iname *.png); do
-			if printf $IMAGE | grep -i '^\(.*\/\)\?\.\?\(cover\|folder\|front\)\.png$' > /dev/null; then
+			if printf $IMAGE | grep -iq '^\(.*\/\)\?\.\?\(cover\|folder\|front\)\.png$'; then
 				COVER=$IMAGE; break
 		    fi
 		done
@@ -64,7 +64,7 @@ main(){
 		fields=0; line=$( grep -n "TRACK\s\s*$TRACKNUMBER" "$CUE" | sed -e 's/\([0-9]*\).*/\1/' -e 's/[^0-9]//g' )
 		until grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 			grep -v "TRACK\s\s*$TRACKNUMBER" |
-			grep TRACK > /dev/null ||
+			grep -q 'TRACK' ||
 			[ $(( $( grep -c ^ "$CUE" ) - $line )) -lt $fields ]
 		do
 			fields=$(( $fields + 1 ))
@@ -75,7 +75,7 @@ main(){
 			sed -e 's/\s*INDEX\s\s*01\s\s*\([0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}\)\s*$/\1/' -e 's/:/./2' )
 		if [ -n "$pregap" ] || [ $TRACKNUMBER -eq 01 ] &&
 			grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
-			grep 'INDEX\s\s*00\s\s*[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}' > /dev/null
+			grep -q 'INDEX\s\s*00\s\s*[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}'
 		then
 			START=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 				grep 'INDEX\s\s*00\s\s*[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}' |
@@ -134,7 +134,7 @@ main(){
 			line=$( grep -n "TRACK\s\s*$TRACKNUMBER" "$CUE" | sed -e 's/\([0-9]*\).*/\1/' -e 's/[^0-9]//g' )
 			until grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 				grep -v "TRACK\s\s*$TRACKNUMBER" |
-				grep TRACK > /dev/null ||
+				grep -q 'TRACK' ||
 				[ $(( $( grep -c ^ "$CUE" ) - $line )) -lt $fields ]
 			do
 				fields=$(( $fields + 1 ))
@@ -144,7 +144,7 @@ main(){
 				sed -e 's/\s*INDEX\s\s*01\s\s*\([0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}\)\s*$/\1/' -e 's/:/./2' )
 			if [ -n "$pregap" ] &&
 				grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
-				grep "INDEX 00" > /dev/null
+				grep -q 'INDEX 00'
 			then
 				END=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 					grep "INDEX 00" |
@@ -161,7 +161,7 @@ main(){
 		fi
 	done
 	# Remove a temporary file that may or may not have been created
-	printf "$FILE" | grep '/tmp/.*\.flac' > /dev/null && rm "$FILE"
+	printf "$FILE" | grep -q '/tmp/.*\.flac' && rm "$FILE"
 	# Exit 1 if any of the encoding processes did not exit 0
 	for PID in $PIDS; do
 		wait $PID
@@ -201,7 +201,7 @@ guess(){ # Try to find an audio file if the one in the cue doesn't exist or isn'
 		cuename="$( printf $CUE | sed 's/\(.*\/\)\?\(.*\)\.cue$/\2/I' )"
 		count=0
 		for file in $files; do
-			if printf $file | grep -i "\(.*\/\)\?$cuename\.....\?$" > /dev/null; then
+			if printf $file | grep -iq "\(.*\/\)\?$cuename\.....\?$"; then
 				match=$file; count=$(( $count + 1 ))
 			fi
 		done 
@@ -217,10 +217,8 @@ guess(){ # Try to find an audio file if the one in the cue doesn't exist or isn'
 }
 # Discover the script's name for use in help and error messages
 name=$( printf "$0" | sed 's/.*\///' )
-# Make sure that flac is installed and /dev/null exists
-if [ ! -e '/dev/null' ]; then
-	printf '%s\n' "$name: /dev/null not found. Aborting." & exit 1
-elif ! flac > /dev/null 2>&1; then
+# Make sure that flac is installed
+if [ -e '/dev/null' ] && ! flac > /dev/null 2>&1; then
 	printf '%s\n' "$name: flac does not seem to be installed. Aborting." & exit 1
 fi
 # Check for options that have been enabled
@@ -242,11 +240,11 @@ done
 # Make sure that the remaining parameter is a cue file
 if [ -z "$CUE" ]; then
 	>&2 printf '%s\n' "$name: No cue file specified. See --help for usage." & exit 1
-elif [ ! -f "$CUE" ] || ! printf "$CUE" | grep -i '\.cue$' > /dev/null; then
+elif [ ! -f "$CUE" ] || ! printf "$CUE" | grep -iq '\.cue$'; then
 	>&2 printf '%s\n' "$name: \"$CUE\" is neither a cue file nor a valid option." & exit 1
 fi
 # Make sure we're in the same directory as the cue file
-printf "$CUE" | grep '/' > /dev/null && cd "$( printf "$CUE" | sed 's/\(.*\)\/.*/\1\//' )"
+printf "$CUE" | grep -q '/' && cd "$( printf "$CUE" | sed 's/\(.*\)\/.*/\1\//' )"
 # Make sure that a single audio file is listed in the cue and that it exists, or look for an alternative
 FILE=$( grep 'FILE' "$CUE" | grep -o '\".*\"' | sed 's/^"\(.*\)"$/\1/' )
 if [ $( printf "$FILE" | wc -l | sed 's/[^0-9]//g' ) -gt 1 ]; then
@@ -261,7 +259,7 @@ elif [ ! -f "$FILE" ]; then
 	fi
 fi
 # Make sure that the audio file is a flac file, and try to convert it or find a different one if it isn't
-if [ -f "$FILE" ] && ! printf "$FILE" | grep -i '\.flac$' > /dev/null; then
+if [ -f "$FILE" ] && ! printf "$FILE" | grep -iq '\.flac$'; then
 	if [ ! -d '/tmp' ]; then
 		>&2 printf '%s\n' "$name: Format conversion requires /tmp to exist." & exit 1
 	else
@@ -275,7 +273,7 @@ if [ -f "$FILE" ] && ! printf "$FILE" | grep -i '\.flac$' > /dev/null; then
 	fi
 	if [ -f "$FILE" ]; then
 		printf '%s\n' "$name: Trying \"$FILE\" instead..."
-		if ! printf "$FILE" | grep -i '\.flac$' > /dev/null; then
+		if ! printf "$FILE" | grep -iq '\.flac$'; then
 			flac --totally-silent -0 -f -o "/tmp/$filename" "$FILE" && FILE="/tmp/$filename" ||
 			( >&2 printf '%s\n' "$name: File conversion failed." & exit 1 )
 		fi
