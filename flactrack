@@ -83,17 +83,19 @@ main(){
 		fi
 		TITLE=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 			grep TITLE |
-			sed 's/^.*TITLE\s\s*\"\(.*\)\".$/\1/' )
+			sed 's/^.*TITLE\s\s*\"\(.*\)\"\s*$/\1/' )
 		PERFORMER=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 			grep PERFORMER |
-			sed 's/^.*PERFORMER\s\s*\"\(.*\)\".$/\1/' ) ||
-		PERFORMER=$( sed '/TRACK/q' "$CUE" |
-			grep '^\s*PERFORMER' |
-			grep -o '\".*\"' |
-			sed 's/^\s*"\(.*\)"\s*$/\1/' )
+			sed 's/^.*PERFORMER\s\s*\"\(.*\)\"\s*$/\1/' )
+		if [ -z "$PERFORMER" ]; then
+			PERFORMER=$( sed '/TRACK/q' "$CUE" |
+				grep '^\s*PERFORMER' |
+				grep -o '\".*\"' |
+				sed 's/^\s*"\(.*\)"\s*$/\1/' )
+		fi
 		SONGWRITER=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 			grep SONGWRITER |
-			sed 's/^.*SONGWRITER\s\s*\"\(.*\)\".$/\1/' )
+			sed 's/^.*SONGWRITER\s\s*\"\(.*\)\"\s*$/\1/' )
 		# Set the tags and file names
 		test -n "$TITLE" && TAGS="$TAGS --tag=TITLE=\"$TITLE\""
 		if [ -n "$SONGWRITER" ]; then
