@@ -7,7 +7,16 @@ Flactrack is a shell script for splitting single-file albums into tagged flac tr
     flactrack [options] <file.cue>
 
 #### File Selection
-The sript expects one cue file as a command line argument. The name of the matching audio file is read from the cue sheet. If that file cannot be found (perhaps because the audio file has been renamed and the cue file has not been updated accordingly), the script will look for an audio file that's likely to be the right one based on its name. If the script can't find the matching audio file, simply edit the FILE line in the cue file with your favorite text editor so that it contains the correct file name. If the audio file is not a .flac file, the script will attempt to convert it to flac, creating a temporary file that will be removed when the job is done. This lengthens the job considerably. See the flac encoder's documentation for a list of supported input formats.
+The sript expects one cue file as a command line argument. The name of the matching audio file is read from the cue sheet. If that file cannot be found (perhaps because the audio file has been renamed and the cue file has not been updated accordingly), the script will look for an audio file that's likely to be the right one based on its name. If the script can't find the matching audio file, simply edit the FILE line in the cue file with your favorite text editor so that it contains the correct file name.
+
+##### Unsupported Audio Formats
+If the audio file is not a .flac file, the script will attempt to convert it to flac, creating a temporary file that will be removed when the job is done. This lengthens the job considerably. See the flac encoder's documentation for a list of supported input formats. Because .wav is one of the supported formats, splitting an unsupported file type (e.g. .ape) is as simple as running the appropriate decoder first:
+
+    mac <file.ape> <file.wav> -d && flactrack <file.cue>
+Flactrack should be able to find the decoded file automatiaclly. Alternatively, there are various ways of converting files directly to flac:
+
+    ffmpeg -i <file.ape> <file.flac> && flactrack <file.cue>
+The best way to do this may vary from system to system and format to format, but it should usually be simple. It is thererfore left up to the user in order to keep flactrack simple.
 
 #### Tagging
 Created tracks are tagged with metadata from the cue file and a cover image. If the metadata in the cue is incorrect or missing, the equivalent tags will be as well. You can change the content of the tags by editing the cue file before you run the script.
@@ -25,7 +34,7 @@ In order for the script to find it automatically, the cover image must be a jpg 
      -i <file>      short for --image  
 Options must be declared seperately. Strings of short options are not supported.
 
-##### Note: File Removal
+##### File Removal
 Flactrack does not have an option to remove the original file after splitting it into tracks. This behavior is very easy to produce using '&& rm':
 
     flactrack <file.cue> && rm <file.flac>
