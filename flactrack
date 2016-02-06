@@ -17,10 +17,13 @@
 
 main(){
 	# Gather the metadata that's the same for all of the tracks
-	ALBUM=$( sed '/TRACK/q' "$CUE" | grep '^\s*TITLE' | grep -o '\".*\"' | sed 's/^\s*"\(.*\)"\s*$/\1/' )  
+	ALBUM=$( sed '/TRACK/q' "$CUE" |
+		grep '^\s*TITLE' |
+		grep -o '\".*\"' |
+		sed -e 's/^\s*"\(.*\)"\s*$/\1/' -e 's/"/\\"/g' )
 	GENRE=$( sed '/TRACK/q' "$CUE" |
 		grep '^\s*REM\s\s*GENRE' |
-		sed -e 's/.*GENRE\s\s*\(.*\)\s*$/\1/' -e 's/^\s*"\(.*\)"\s*$/\1/' )
+		sed -e 's/.*GENRE\s\s*\(.*\)\s*$/\1/' -e 's/^\s*"\(.*\)"\s*$/\1/' -e 's/"/\\"/g' )
 	DATE=$( sed '/TRACK/q' "$CUE" |
 		grep '^\s*REM\s\s*\(DATE\|YEAR\)' |
 		sed  -e 's/.*\(DATE\|YEAR\)\s\s*\([^\s\r]*\).*/\2/' -e 's/^\s*"\(.*\)"\s*$/\1/' )
@@ -83,19 +86,19 @@ main(){
 		fi
 		TITLE=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 			grep TITLE |
-			sed 's/^.*TITLE\s\s*\"\(.*\)\"\s*$/\1/' )
+			sed -e 's/^.*TITLE\s\s*\"\(.*\)\"\s*$/\1/' -e 's/\\/\\\\/g' -e 's/"/\\"/g' )
 		PERFORMER=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 			grep PERFORMER |
-			sed 's/^.*PERFORMER\s\s*\"\(.*\)\"\s*$/\1/' )
+			sed -e 's/^.*PERFORMER\s\s*\"\(.*\)\"\s*$/\1/' -e 's/"/\\"/g' )
 		if [ -z "$PERFORMER" ]; then
 			PERFORMER=$( sed '/TRACK/q' "$CUE" |
 				grep '^\s*PERFORMER' |
 				grep -o '\".*\"' |
-				sed 's/^\s*"\(.*\)"\s*$/\1/' )
+				sed -e 's/^\s*"\(.*\)"\s*$/\1/' -e 's/"/\\"/g' )
 		fi
 		SONGWRITER=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
 			grep SONGWRITER |
-			sed 's/^.*SONGWRITER\s\s*\"\(.*\)\"\s*$/\1/' )
+			sed -e 's/^.*SONGWRITER\s\s*\"\(.*\)\"\s*$/\1/' -e 's/"/\\"/g' )
 		# Set the tags and file names
 		test -n "$TITLE" && TAGS="$TAGS --tag=TITLE=\"$TITLE\""
 		if [ -n "$SONGWRITER" ]; then
@@ -120,7 +123,7 @@ main(){
 		if [ -f "$NAME" ] && [ -z "$force" ]; then
 			printf '%s\n' "$name: Exsisting file will not be recreated: \"$NAME\""
 		fi
-		NAME=\"$NAME\"
+		NAME=\"$( printf "$NAME" | sed 's/\([^\\]\)"/\1\\"/g' )\"
 		# The end point for each track is contained in the next track's metadata
 		if [ $TRACKNUMBER -ne $TRACKTOTAL ]; then
 			TRACKNUMBER=$( expr $TRACKNUMBER + 1 )
