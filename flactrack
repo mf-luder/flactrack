@@ -193,7 +193,7 @@ guess(){ # Try to find an audio file if the one in the cue doesn't exist or isn'
 	test -n "$1" && ext="$1" || ext=$( printf $FILE | sed 's/.*\.\(.*\)$/\1/' )
 	files=$( find -maxdepth 1 | grep -i "\.$ext$" )
 	# if there's exactly one, assume it's the right one
-	if [ $( printf "$files" | wc -l | sed 's/[^0-9]//g' ) -eq 1 ]; then
+	if [ $( printf "$files" | wc -l | sed 's/[^0-9]//g' ) -eq 0 ]; then
 		printf "$files" | sed 's/.*\///'
 	# Otherwise, look for compatible audio files with the same name as the cue file
 	else
