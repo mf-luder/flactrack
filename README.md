@@ -18,7 +18,7 @@ Flactrack should be able to find the decoded file automatiaclly. Alternatively, 
     ffmpeg -i <file.ape> <file.flac> && flactrack <file.cue>
 Similarly, converting the resulting tracks is relatively simple. In this case using ffmpeg has the advantage of preserving tags:
 
-    mkdir MP3; for trk in [0-9][0-9]\ -\ *.flac; do ffmpeg -i "$trk" -ab 320k MP3/"${trk%.flac}.mp3"; done
+    mkdir MP3; for t in [0-9][0-9]\ -\ *.flac; do ffmpeg -i "$t" -ab 320k MP3/"${t%.flac}.mp3"; done
 
 #### Tagging
 Created tracks are tagged with metadata from the cue file and a cover image. If the metadata in the cue is incorrect or missing, the equivalent tags will be as well. You can change the content of the tags by editing the cue file before you run the script.
