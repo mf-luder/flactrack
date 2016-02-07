@@ -19,8 +19,7 @@ main(){
 	# Gather the metadata that's the same for all of the tracks
 	ALBUM=$( sed '/TRACK/q' "$CUE" |
 		grep '^\s*TITLE' |
-		grep -o '\".*\"' |
-		sed -e 's/^\s*"\(.*\)"\s*$/\1/' -e 's/"/\\"/g' )
+		sed -e 's/^\s*TITLE\s\s*"\(.*\)"\s*$/\1/' -e 's/"/\\"/g' )
 	GENRE=$( sed '/TRACK/q' "$CUE" |
 		grep '^\s*REM\s\s*GENRE' |
 		sed -e 's/.*GENRE\s\s*\(.*\)\s*$/\1/' -e 's/^\s*"\(.*\)"\s*$/\1/' -e 's/"/\\"/g' )
@@ -60,43 +59,42 @@ main(){
 		if [ $TRACKNUMBER -ge 1 ] && [ $TRACKNUMBER -le 9 ]; then
 			TRACKNUMBER=0$TRACKNUMBER
 		fi
-		# Count the number of fields in the TRACK section of the cue file
-		fields=0; line=$( grep -n "TRACK\s\s*$TRACKNUMBER" "$CUE" | sed -e 's/\([0-9]*\).*/\1/' -e 's/[^0-9]//g' )
-		until grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
+		# Determine the length of the TRACK section in the cue file
+		length=0; top=$( grep -n "TRACK\s\s*$TRACKNUMBER" "$CUE" | sed -e 's/\([0-9]*\).*/\1/' -e 's/[^0-9]//g' )
+		until sed -n $top,$(( $top + $length ))p "$CUE" |
 			grep -v "TRACK\s\s*$TRACKNUMBER" |
 			grep -q 'TRACK' ||
-			[ $(( $( grep -c ^ "$CUE" ) - $line )) -lt $fields ]
+			[ $(( $( grep -c ^ "$CUE" ) - $top )) -lt $length ]
 		do
-			fields=$(( $fields + 1 ))
+			length=$(( $length + 1 ))
 		done
 		# Gather per-track metadata
-		START=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
+		START=$( sed -n $top,$(( $top + $length ))p "$CUE" |
 			grep '\s*INDEX\s\s*01' |
 			sed -e 's/\s*INDEX\s\s*01\s\s*\([0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}\)\s*$/\1/' -e 's/:/./2' )
 		if [ -n "$pregap" ] || [ $TRACKNUMBER -eq 01 ] &&
-			grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
+			sed -n $top,$(( $top + $length ))p "$CUE" |
 			grep -q 'INDEX\s\s*00\s\s*[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}'
 		then
-			START=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
+			START=$( sed -n $top,$(( $top + $length ))p "$CUE" |
 				grep 'INDEX\s\s*00\s\s*[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}' |
 				sed -e 's/\s*INDEX\s\s*00\s\s*\([0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}\)\s*$/\1/' -e 's/:/./2' )
 		fi
 		if [ "$START" != "$( printf "$START" | grep '^[0-9]\{2\}:[0-9]\{2\}\.[0-9]\{2\}$' )" ]; then
 			>&2 printf '%s\n' "$name: Missing or malformed initial index for track $TRACKNUMBER"
 		fi
-		TITLE=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
+		TITLE=$( sed -n $top,$(( $top + $length ))p "$CUE" |
 			grep TITLE |
 			sed -e 's/^.*TITLE\s\s*\"\(.*\)\"\s*$/\1/' -e 's/\\/\\\\/g' -e 's/"/\\"/g' )
-		PERFORMER=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
+		PERFORMER=$( sed -n $top,$(( $top + $length ))p "$CUE" |
 			grep PERFORMER |
 			sed -e 's/^.*PERFORMER\s\s*\"\(.*\)\"\s*$/\1/' -e 's/"/\\"/g' )
 		if [ -z "$PERFORMER" ]; then
 			PERFORMER=$( sed '/TRACK/q' "$CUE" |
 				grep '^\s*PERFORMER' |
-				grep -o '\".*\"' |
-				sed -e 's/^\s*"\(.*\)"\s*$/\1/' -e 's/"/\\"/g' )
+				sed -e 's/^\s*PERFORMER\s\s*"\(.*\)"\s*$/\1/' -e 's/"/\\"/g' )
 		fi
-		SONGWRITER=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
+		SONGWRITER=$( sed -n $top,$(( $top + $length ))p "$CUE" |
 			grep SONGWRITER |
 			sed -e 's/^.*SONGWRITER\s\s*\"\(.*\)\"\s*$/\1/' -e 's/"/\\"/g' )
 		# Set the tags and file names
@@ -130,23 +128,23 @@ main(){
 			if [ $TRACKNUMBER -ge 1 ] && [ $TRACKNUMBER -le 9 ]; then
 				TRACKNUMBER=0$TRACKNUMBER;
 			fi
-			fields=0
-			line=$( grep -n "TRACK\s\s*$TRACKNUMBER" "$CUE" | sed -e 's/\([0-9]*\).*/\1/' -e 's/[^0-9]//g' )
-			until grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
+			length=0
+			top=$( grep -n "TRACK\s\s*$TRACKNUMBER" "$CUE" | sed -e 's/\([0-9]*\).*/\1/' -e 's/[^0-9]//g' )
+			until sed -n $top,$(( $top + $length ))p "$CUE" |
 				grep -v "TRACK\s\s*$TRACKNUMBER" |
 				grep -q 'TRACK' ||
-				[ $(( $( grep -c ^ "$CUE" ) - $line )) -lt $fields ]
+				[ $(( $( grep -c ^ "$CUE" ) - $top )) -lt $length ]
 			do
-				fields=$(( $fields + 1 ))
+				length=$(( $length + 1 ))
 			done
-			END=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
+			END=$( sed -n $top,$(( $top + $length ))p "$CUE" |
 				grep "INDEX\s\s*01" |
 				sed -e 's/\s*INDEX\s\s*01\s\s*\([0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}\)\s*$/\1/' -e 's/:/./2' )
 			if [ -n "$pregap" ] &&
-				grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
+				grep  "$CUE" |
 				grep -q 'INDEX 00'
 			then
-				END=$( grep -A $fields "TRACK\s\s*$TRACKNUMBER" "$CUE" |
+				END=$( sed -n $top,$(( $top + length ))p "$CUE" |
 					grep "INDEX 00" |
 					sed -e 's/\s*INDEX\s\s*00\s\s*\([0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}\)\s*$/\1/' -e 's/:/./2' )
 			fi
@@ -246,7 +244,7 @@ fi
 # Make sure we're in the same directory as the cue file
 printf "$CUE" | grep -q '/' && cd "$( printf "$CUE" | sed 's/\(.*\)\/.*/\1\//' )"
 # Make sure that a single audio file is listed in the cue and that it exists, or look for an alternative
-FILE=$( grep 'FILE' "$CUE" | grep -o '\".*\"' | sed 's/^"\(.*\)"$/\1/' )
+FILE=$( grep 'FILE' "$CUE" | sed 's/^\s*FILE\s\s*"\(.*\)"[^"]*$/\1/' )
 if [ $( printf "$FILE" | wc -l | sed 's/[^0-9]//g' ) -gt 1 ]; then
 	printf '%s\n' "$name: Multiple audio files are listed in the cue."
 	printf '%s\n' " The album has probably already been split into tracks."
