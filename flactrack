@@ -39,14 +39,14 @@ main(){
 	# Try to find a cover image if one was not specified. Look for jpg first, then png.
 	oldIFS=$IFS; IFS=$(printf '\n\b')
 	if [ ! -f "$COVER" ] && [ "$COVER" != "0" ]; then
-		for IMAGE in $( find . -maxdepth 2 \( -iname \*.jpg -o -iname \*.jpeg \) ); do
+		for IMAGE in $( find -maxdepth 2 \( -iname \*.jpg -o -iname \*.jpeg \) ); do
 			if printf $IMAGE | grep -iq '^\(.*\/\)\?\.\?\(cover\|folder\|front\)\.jpe\?g$'; then
 				COVER=$IMAGE; break
 		    fi
 		done
 	fi
 	if [ ! -f "$COVER" ] && [ "$COVER" != 0 ]; then
-		for IMAGE in $(find . -maxdepth 2 -iname *.png); do
+		for IMAGE in $(find -maxdepth 2 -iname *.png); do
 			if printf $IMAGE | grep -iq '^\(.*\/\)\?\.\?\(cover\|folder\|front\)\.png$'; then
 				COVER=$IMAGE; break
 		    fi
@@ -60,14 +60,17 @@ main(){
 			TRACKNUMBER=0$TRACKNUMBER
 		fi
 		# Determine the length of the TRACK section in the cue file
-		length=0; top=$( grep -n "TRACK\s\s*$TRACKNUMBER" "$CUE" | sed -e 's/\([0-9]*\).*/\1/' -e 's/[^0-9]//g' )
-		until sed -n $top,$(( $top + $length ))p "$CUE" |
-			grep -v "TRACK\s\s*$TRACKNUMBER" |
-			grep -q 'TRACK' ||
-			[ $(( $( grep -c ^ "$CUE" ) - $top )) -lt $length ]
-		do
-			length=$(( $length + 1 ))
-		done
+		if [ $TRACKNUMBER = "01" ] || [ $TRACKNUMBER = $TRACKTOTAL ]; then
+			top=$( grep -n "TRACK\s\s*$TRACKNUMBER" "$CUE" | sed -e 's/\([0-9]*\).*/\1/' -e 's/[^0-9]//g' )
+			length=0
+			until sed -n $top,$(( $top + $length ))p "$CUE" |
+				grep -v "TRACK\s\s*$TRACKNUMBER" |
+				grep -q 'TRACK' ||
+				[ $(( $( grep -c ^ "$CUE" ) - $top )) -lt $length ]
+			do
+				length=$(( $length + 1 ))
+			done
+		fi
 		# Gather per-track metadata
 		START=$( sed -n $top,$(( $top + $length ))p "$CUE" |
 			grep '\s*INDEX\s\s*01' |
@@ -128,8 +131,8 @@ main(){
 			if [ $TRACKNUMBER -ge 1 ] && [ $TRACKNUMBER -le 9 ]; then
 				TRACKNUMBER=0$TRACKNUMBER;
 			fi
-			length=0
 			top=$( grep -n "TRACK\s\s*$TRACKNUMBER" "$CUE" | sed -e 's/\([0-9]*\).*/\1/' -e 's/[^0-9]//g' )
+			length=0
 			until sed -n $top,$(( $top + $length ))p "$CUE" |
 				grep -v "TRACK\s\s*$TRACKNUMBER" |
 				grep -q 'TRACK' ||
@@ -195,7 +198,7 @@ guess(){ # Try to find an audio file if the one in the cue doesn't exist or isn'
 		printf "$files" | sed 's/.*\///'
 	# Otherwise, look for compatible audio files with the same name as the cue file
 	else
-		files=$( find . -maxdepth 1 | grep -i '.*\.\(flac\|wav\|w64\|raw\|rf64\|oga\|ogg\|aiff\?\)$' )
+		files=$( find -maxdepth 1 | grep -i '.*\.\(flac\|wav\|w64\|raw\|rf64\|oga\|ogg\|aiff\?\)$' )
 		cuename="$( printf $CUE | sed 's/\(.*\/\)\?\(.*\)\.cue$/\2/I' )"
 		count=0
 		for file in $files; do
