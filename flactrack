@@ -115,7 +115,9 @@ main(){
 					}
 				}' "$CUE" )
 		fi
-		echo START: $START
+		if ! printf '%s' "$START" | grep -q '^[0-9]\{2\}:[0-9]\{2\}\.[0-9]\{2\}$'; then
+			>&2 printf '%s\n' "$NAME: Missing or malformed initial index for track $TRACKNUMBER"
+		fi
 		TITLE=$( sed -n "
 			$top,$(( $top + $length ))"'{
 				/^\s*TITLE/{
@@ -200,9 +202,6 @@ main(){
 							s/:/./2p
 						}
 					}' "$CUE" )
-			fi
-			if ! printf '%s' "$START" | grep -q '^[0-9]\{2\}:[0-9]\{2\}\.[0-9]\{2\}$'; then
-				>&2 printf '%s\n' "$NAME: Missing or malformed initial index for track $TRACKNUMBER"
 			fi
 			# Create the files
 			flac -c -d --totally-silent --skip=$START --until=$END "$FILE" |
