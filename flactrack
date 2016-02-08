@@ -57,7 +57,7 @@ main(){
 	oldIFS=$IFS; IFS=$(printf '\n\b')
 	if [ ! -f "$COVER" ] && [ "$COVER" != "0" ]; then
 		if [ -n "$COVER" ]; then
-			printf '%s\n' "$name: File not found: \"$COVER\""
+			printf '%s\n' "$NAME: File not found: \"$COVER\""
 		fi
 		for IMAGE in $( find | grep -i '\.jpe\?g$' ); do
 			if printf '%s' "$IMAGE" |
@@ -115,9 +115,7 @@ main(){
 					}
 				}' "$CUE" )
 		fi
-		if [ "$START" != "$( printf '%s' "$START" | grep '^[0-9]\{2\}:[0-9]\{2\}\.[0-9]\{2\}$' )" ]; then
-			>&2 printf '%s\n' "$name: Missing or malformed initial index for track $TRACKNUMBER"
-		fi
+		echo START: $START
 		TITLE=$( sed -n "
 			$top,$(( $top + $length ))"'{
 				/^\s*TITLE/{
@@ -161,14 +159,14 @@ main(){
 		test -n "$GENRE" && TAGS="$TAGS --tag=GENRE=\"$GENRE\""
 		test -f "$COVER" && TAGS="$TAGS --picture=\"$COVER\""
 		if [ -n "$TITLE" ]; then
-			NAME="$TRACKNUMBER - $( printf '%s' "$TITLE" | sed 's/\//-/g' ).flac"
+			FILENAME="$TRACKNUMBER - $( printf '%s' "$TITLE" | sed 's/\//-/g' ).flac"
 		else
-			NAME="TRACK $TRACKNUMBER.flac"
+			FILENAME="TRACK $TRACKNUMBER.flac"
 		fi
-		if [ -f "$NAME" ] && [ -z "$force" ]; then
-			printf '%s\n' "$name: Exsisting file will not be recreated: \"$NAME\""
+		if [ -f "$FILENAME" ] && [ -z "$force" ]; then
+			printf '%s\n' "$NAME: Exsisting file will not be recreated: \"$FILENAME\""
 		fi
-		NAME=\"$( printf '%s' "$NAME" | sed 's/\([^\\]\)"/\1\\"/g' )\"
+		FILENAME=\"$( printf '%s' "$FILENAME" | sed 's/\([^\\]\)"/\1\\"/g' )\"
 		# The end point for each track is contained in the next track's metadata
 		if [ $TRACKNUMBER -ne $TRACKTOTAL ]; then
 			TRACKNUMBER=$( expr $TRACKNUMBER + 1 )
@@ -203,28 +201,22 @@ main(){
 						}
 					}' "$CUE" )
 			fi
+			if ! printf '%s' "$START" | grep -q '^[0-9]\{2\}:[0-9]\{2\}\.[0-9]\{2\}$'; then
+				>&2 printf '%s\n' "$NAME: Missing or malformed initial index for track $TRACKNUMBER"
+			fi
 			# Create the files
 			flac -c -d --totally-silent --skip=$START --until=$END "$FILE" |
-			eval flac --totally-silent $force $compression $TAGS -o $NAME - &
+			eval flac --totally-silent $force $compression $TAGS -o $FILENAME - &
 			PIDS="$PIDS $!"
 		else
 			flac -c -d --totally-silent --skip=$START "$FILE" |
-			eval flac --totally-silent $force $compression $TAGS -o $NAME - &
+			eval flac --totally-silent $force $compression $TAGS -o $FILENAME - &
 			PIDS="$PIDS $!"
-		fi
-	done
-	# Remove a temporary file that may or may not have been created
-	test -n "$tempfile" && rm "$FILE"
-	# Exit 1 if any of the encoding processes did not exit 0
-	for PID in $PIDS; do
-		wait $PID
-		if [ $? -ne 0 ]; then
-			exit 1
 		fi
 	done
 }
 usage(){ # the --help text
-printf '%s' "Usage: $name [options] <file.cue>
+printf '%s' "Usage: $NAME [options] <file.cue>
 
 Use a cue file to produce tagged flac tracks from
 a lossless audio file.
@@ -269,10 +261,10 @@ guess(){ # Try to find an audio file if the one in the cue doesn't exist or isn'
 	IFS=$oldIFS
 }
 # Discover the script's name for use in help and error messages
-name=$( printf '%s' "$0" | sed 's/.*\///' )
+NAME=$( printf '%s' "$0" | sed 's/.*\///' )
 # Make sure that flac is installed
 if [ -w '/dev/null' ] && ! flac > /dev/null 2>&1; then
-	printf '%s\n' "$name: flac does not seem to be installed. Aborting." & exit 1
+	printf '%s\n' "$NAME: flac does not seem to be installed. Aborting." & exit 1
 fi
 # Check for options that have been enabled
 if [ $# -eq 0 ]; then
@@ -290,78 +282,87 @@ while [ $# -gt 0 ]; do
 			if [ -z "$COVER" ]; then
 				COVER=$( printf '%s' "$2" | sed "s/^~\//\/home\/$USER\//" ); shift; shift
 			else
-				>&2 printf '%s\n' "$name: --image may only be used once." & exit 1
+				>&2 printf '%s\n' "$NAME: --image may only be used once." & exit 1
 			fi;;
 		--image=* )
 			if [ -z "$COVER" ]; then
 				COVER=$( printf '%s' "$1" | sed -e 's/--picture=//' -e "s/^~\//\/home\/$USER\//" ); shift;
 			else
-				>&2 printf '%s\n' "$name: --image may only be used once." & exit 1
+				>&2 printf '%s\n' "$NAME: --image may only be used once." & exit 1
 			fi;;
 		--image= )
 			if [ -z "$COVER" ]; then
 				COVER=0; shift;
 			else
-				>&2 printf '%s\n' "$name: --image may only be used once." & exit 1
+				>&2 printf '%s\n' "$NAME: --image may only be used once." & exit 1
 			fi;;
 		-0 | -1 | -2 | -3 | -4 | -5 | -6 | -7 | -8 )
 			if [ -z "$compression" ]; then
 				compression="$1"; shift;
 			else
-				>&2 printf '%s\n' "$name: Compression level may only be specified once." & exit 1
+				>&2 printf '%s\n' "$NAME: Compression level may only be specified once." & exit 1
 			fi;;
 		*)
 			if [ -z "$CUE" ]; then
 				CUE="$1"; shift;
 			else
-				>&2 printf '%s\n' "$name: Invalid paramters." & exit 1
+				>&2 printf '%s\n' "$NAME: Invalid paramters." & exit 1
 			fi;;
 	esac
 done
 # Make sure that the remaining parameter is a cue file
 if [ -z "$CUE" ]; then
-	>&2 printf '%s\n' "$name: No cue file specified. See --help for usage." & exit 1
+	>&2 printf '%s\n' "$NAME: No cue file specified. See --help for usage." & exit 1
 elif [ ! -f "$CUE" ] || ! printf '%s' "$CUE" | grep -iq '\.cue$'; then
-	>&2 printf '%s\n' "$name: \"$CUE\" is neither a cue file nor a valid option." & exit 1
+	>&2 printf '%s\n' "$NAME: \"$CUE\" is neither a cue file nor a valid option." & exit 1
 fi
 # Make sure we're in the same directory as the cue file
 printf '%s' "$CUE" | grep -q '/' && cd "$( printf '%s' "$CUE" | sed 's/\(.*\)\/.*/\1\//' )"
 # Make sure that a single audio file is listed in the cue and that it exists, or look for an alternative
 FILE=$( grep 'FILE' "$CUE" | sed 's/^\s*FILE\s\s*"\(.*\)"[^"]*$/\1/' )
 if [ $( printf '%s' "$FILE" | wc -l | sed 's/[^0-9]//g' ) -gt 1 ]; then
-	>&2 printf '%s\n' "$name: Multiple audio files are listed in the cue."
+	>&2 printf '%s\n' "$NAME: Multiple audio files are listed in the cue."
 	>&2 printf '%s\n' " The album has probably already been split into tracks."
 	exit 1
 elif [ ! -f "$FILE" ]; then
-	printf '%s\n' "$name: Could not find the audio file in the cue sheet: \"$FILE\""
+	printf '%s\n' "$NAME: Could not find the audio file in the cue sheet: \"$FILE\""
 	FILE=$(guess)
-	test -f "$FILE" && printf '%s\n'  "$name: Trying \"$FILE\" instead..."
+	test -f "$FILE" && printf '%s\n'  "$NAME: Trying \"$FILE\" instead..."
 fi
 # Make sure that the audio file is a flac file, and try to convert it or find a different one if it isn't
 if [ -f "$FILE" ] && ! printf '%s' "$FILE" | grep -iq '\.flac$'; then
-	filename="$( printf '%s' "$FILE" | sed 's/\(.*\)\..*/\1/' ).flac"
+	TEMPFILE="$( printf '%s' "$FILE" | sed 's/\(.*\)\..*/\1/' ).flac"
 	if [ -w '/tmp/' ]; then
-		filename="/tmp/$filename"; forcetemp='-f'
+		TEMPFILE="/tmp/$TEMPFILE"; f='-f'
 	fi
-	if flac --totally-silent -0 "$forcetemp" -o "$filename" "$FILE"; then
-		FILE="$filename"; tempfile=0
+	if flac --totally-silent -0 "$f" -o "$TEMPFILE" "$FILE"; then
+		FILE="$TEMPFILE"; tempfile=0
 	else
-		printf '%s\n' "$name: Format not supported by the flac encoder: \"$FILE\""
+		printf '%s\n' "$NAME: Format not supported by the flac encoder: \"$FILE\""
 		FILE="$(guess flac)"
-		test -f "$FILE" && printf '%s\n' "$name: Trying \"$FILE\" instead..."
+		test -f "$FILE" && printf '%s\n' "$NAME: Trying \"$FILE\" instead..."
 	fi
 	if [ -f "$FILE" ] && ! printf '%s' "$FILE" | grep -iq '\.flac$'; then
-		if flac --totally-silent -0 "$forcetemp" -o "$filename" "$FILE"; then
-			FILE="$filename"; tempfile=0
+		if flac --totally-silent -0 "$f" -o "$TEMPFILE" "$FILE"; then
+			FILE="$TEMPFILE"; tempfile=0
 		else
-			printf '%s\n' "$name: File conversion failed."
+			printf '%s\n' "$NAME: File conversion failed."
 		fi
 	fi
 fi
-# Run the main function, which does the splitting and tagging
+# Run the main function, which does the splitting and tagging, if a suitable audio file has been found
 if [ -f "$FILE" ] && printf '%s' "$FILE" | grep -iq '\.flac$'; then
 	main
 else
-	>&2 printf '%s\n' "$name: No compatible audio file found." & exit 1
+	>&2 printf '%s\n' "$NAME: No compatible audio file found." & exit 1
 fi
+# Remove a temporary file that may or may not have been created
+test -n "$tempfile" && rm "$FILE"
+# Exit 1 if any of the encoding processes did not exit 0
+for PID in $PIDS; do
+	wait $PID
+	if [ $? -ne 0 ]; then
+		exit 1
+	fi
+done
 
