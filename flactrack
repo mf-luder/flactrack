@@ -67,7 +67,7 @@ main(){
 		fi
 		for IMAGE in $( find | grep -i '\.jpe\?g$' ); do
 			if printf '%s' "$IMAGE" |
-				grep -iq '^\([^\/]*\/\)\?\([^\/]\)\?\.\?\(cover\|front_cover\|folder\|front\)\.jpe\?g$'
+				grep -iq '^\([^\/]*\/\)\?\([^\/]*\/\)\?\.\?\(cover\|front_cover\|folder\|front\)\.jpe\?g$'
 			then
 				COVER=$IMAGE; break
 		    fi
