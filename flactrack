@@ -17,6 +17,12 @@
 
 main(){
 	# Gather the metadata that's the same for all of the tracks
+	ALBUMARTIST=$( sed -n '
+		1,/TRACK\s\s*01\s\s*AUDIO/{
+			/^\s*PERFORMER/{
+				s/^\s*PERFORMER\s\s*"\(.*\)"\s*$/\1/p
+			}
+		}' "$CUE" | sed -e 's/"/\\"/g' -e 's/\r//g' )
 	ALBUM=$( sed -n '
 		1,/TRACK\s\s*01\s\s*AUDIO/{
 			/^\s*TITLE/{
@@ -116,12 +122,7 @@ main(){
 				}
 			}' "$CUE" | sed -e 's/"/\\"/g' -e 's/\r//g' )
 		if [ -z "$PERFORMER" ]; then
-			PERFORMER=$( sed -n '
-				1,/TRACK\s\s*01\s\s*AUDIO/{
-					/^\s*PERFORMER/{
-						s/^\s*PERFORMER\s\s*"\(.*\)"\s*$/\1/p
-					}
-				}' "$CUE" | sed -e 's/"/\\"/g' -e 's/\r//g' )
+			PERFORMER="$ALBUMARTIST"; ALBUMARTIST=''
 		fi
 		SONGWRITER=$( sed -n "
 			$top,$(( $top + $length ))"'{
@@ -131,14 +132,9 @@ main(){
 			}' "$CUE" | sed -e 's/"/\\"/g' -e 's/\r//g' )
 		# Set the tags and file names
 		test -n "$TITLE" && TAGS="$TAGS --tag=TITLE=\"$TITLE\""
-		if [ -n "$SONGWRITER" ]; then
-			TAGS="$TAGS --tag=\"ARTIST=\"$SONGWRITER\""
-			if [ -n "$PERFORMER" ]; then
-				TAGS="$TAGS --tag=PERFORMER=\"$PERFORMER\""
-			fi
-		elif [ -n "$PERFORMER" ]; then
-			TAGS="$TAGS --tag=ARTIST=\"$PERFORMER\""
-		fi
+		test -n "$PERFORMER" && TAGS="$TAGS --tag=ARTIST=\"$PERFORMER\""
+		test -n "$ALBUMARTIST" && TAGS="$TAGS --tag=ALBUMARTIST=\"$ALBUMARTIST\""
+		test -n "$SONGWRITER" && TAGS="$TAGS --tag=COMPOSER=\"$SONGWRITER\""
 		test -n "$ALBUM" && TAGS="$TAGS --tag=ALBUM=\"$ALBUM\""
 		test -n "$DISCNUMBER" && TAGS="$TAGS --tag=DISCNUMBER=\"$DISCNUMBER\""
 		test -n "$DATE"  && TAGS="$TAGS --tag=DATE=\"$DATE\""
