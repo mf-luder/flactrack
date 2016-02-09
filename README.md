@@ -20,6 +20,12 @@ Flactrack should be able to find the decoded file automatiaclly. Similarly, conv
 
     mkdir MP3; for t in [0-9][0-9]\ -\ *.flac; do ffmpeg -i "$t" -ab 320k MP3/"${t%.flac}.mp3"; done
 
+##### Embeded Cue Sheets
+Flac supports embedding cue sheets in audio files. The "metaflac" command can be used to extract an embedded cue sheet to a file:
+
+    metaflac --export-cuesheet-to=<file.cue> <file.flac>
+Note that embedded cue sheets only retain indexing information, and so using an extracted cue sheet to split a file will result in tracks that not tagged, except maybe for a cover image.
+
 #### Tagging
 Created tracks are tagged with metadata from the cue file and a cover image. If the metadata in the cue is incorrect or missing, the equivalent tags will be as well. You can change the content of the tags by editing the cue file before you run the script.
 
