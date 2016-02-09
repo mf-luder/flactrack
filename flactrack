@@ -17,22 +17,22 @@
 
 main(){
 	# Gather the metadata that's the same for all of the tracks
-	ALBUMARTIST=$( sed -n '
+	ALBUMPERFORMER=$( sed -n '
 		1,/TRACK\s\s*01\s\s*AUDIO/{
 			/^\s*PERFORMER/{
-				s/^\s*PERFORMER\s\s*"\(.*\)"\s*$/\1/p
+				s/^\s*PERFORMER\s\s*//p
 			}
-		}' "$CUE" | sed -e 's/"/\\"/g' -e 's/\r//g' )
+		}' "$CUE" | sed -e 's/^\s*"\(.*\)"\s*$/\1/' -e 's/"/\\"/g' -e 's/\r//g' )
 	ALBUM=$( sed -n '
 		1,/TRACK\s\s*01\s\s*AUDIO/{
 			/^\s*TITLE/{
-				s/^\s*TITLE\s\s*"\(.*\)"\s*$/\1/p
+				s/^\s*TITLE\s\s*//p
 			}
-		}' "$CUE"| sed -e 's/"/\\"/g' -e 's/\r//g' )
+		}' "$CUE" | sed -e 's/^\s*"\(.*\)"\s*$/\1/' -e 's/"/\\"/g' -e 's/\r//g' )
 	GENRE=$( sed -n '
 		1,/TRACK\s\s*01\s\s*AUDIO/{
 			/^\s*REM\s\s*GENRE/{
-				s/^\s*REM\s\s*GENRE\s\s*\(.*\)\s*$/\1/p
+				s/^\s*REM\s\s*GENRE\s\s*//p
 			}
 		}' "$CUE" | sed -e 's/^\s*"\(.*\)"\s*$/\1/' -e 's/"/\\"/g' -e 's/\r//g' )
 	DATE=$( sed -n '
@@ -85,7 +85,7 @@ main(){
 	IFS=$oldIFS
 	# Loop over each track
 	for TRACKNUMBER in $(seq $TRACKTOTAL); do
-		TAGS=''; TITLE=''; PERFORMER=''; SONGWRITER=''; START=''
+		TAGS=''; TITLE=''; PERFORMER=''; ALBUMARTIST="$ALBUMPERFORMER"; SONGWRITER=''; START=''
 		if [ $TRACKNUMBER -ge 1 ] && [ $TRACKNUMBER -le 9 ]; then
 			TRACKNUMBER=0$TRACKNUMBER
 		fi
@@ -112,24 +112,23 @@ main(){
 		TITLE=$( sed -n "
 			$top,$(( $top + $length ))"'{
 				/^\s*TITLE/{
-					s/^\s*TITLE\s\s*"\(.*\)"\s*$/\1/p
+					s/^\s*TITLE\s\s*//p
 				}
-			}' "$CUE" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e 's/\r//g' )
+			}' "$CUE" | sed -e 's/^\s*"\(.*\)"\s*$/\1/' -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e 's/\r//g' )
 		PERFORMER=$( sed -n "
 			$top,$(( $top + $length ))"'{
 				/^\s*PERFORMER/{
-					s/^\s*PERFORMER\s\s*"\(.*\)"\s*$/\1/p
+					s/^\s*PERFORMER\s\s*//p
 				}
-			}' "$CUE" | sed -e 's/"/\\"/g' -e 's/\r//g' )
-		if [ -z "$PERFORMER" ]; then
-			PERFORMER="$ALBUMARTIST"; ALBUMARTIST=''
-		fi
+			}' "$CUE" | sed -e 's/^\s*"\(.*\)"\s*$/\1/' -e 's/"/\\"/g' -e 's/\r//g' )
+		test -z "$PERFORMER" && PERFORMER="$ALBUMARTIST"
+		test "$PERFORMER" = "$ALBUMARTIST" && ALBUMARTIST=''
 		SONGWRITER=$( sed -n "
 			$top,$(( $top + $length ))"'{
 				/^\s*SONGWRITER/{
-					s/^\s*SONGWRITER\s\s*"\(.*\)"\s*$/\1/p
+					s/^\s*SONGWRITER\s\s*//p
 				}
-			}' "$CUE" | sed -e 's/"/\\"/g' -e 's/\r//g' )
+			}' "$CUE" | sed -e 's/^\s*"\(.*\)"\s*$/\1/' -e 's/"/\\"/g' -e 's/\r//g' )
 		# Set the tags and file names
 		test -n "$TITLE" && TAGS="$TAGS --tag=TITLE=\"$TITLE\""
 		test -n "$PERFORMER" && TAGS="$TAGS --tag=ARTIST=\"$PERFORMER\""
