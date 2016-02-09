@@ -23,8 +23,7 @@ Flactrack should be able to find the decoded file automatiaclly. Similarly, conv
 #### Tagging
 Created tracks are tagged with metadata from the cue file and a cover image. If the metadata in the cue is incorrect or missing, the equivalent tags will be as well. You can change the content of the tags by editing the cue file before you run the script.
 
-In order for the script to find it automatically, the cover image must be a jpg or a png file called "cover", "folder", "front," (case insensitive) or the hidden equivalent (prepended with a dot) and have an appropriate file extension. The script looks for jpg first, then png, and uses the first match it finds. Alternatively, you can specify an image to use on the command line with  
-"--image=\<file\>". If the specified file does not exist the option will be ignored and the script will look for a suitable image in the usual manner. Image tagging can be disabled by selecting an empty string (--image="").
+In order for the script to find it automatically, the cover image must be a jpg or a png file called "cover", "front_cover" "folder", "front", (case insensitive) or the hidden equivelent of one of those (prepended with a dot), with an appropriate file extension. The script looks in the cue file's directory and any immediate subdirectories for jpg first, then png, and uses the first match it finds. Alternatively, you can specify an image on the command line with. If the specified image does not exist, the option will be ignored and the script will look for a suitable image in the usual manner. Image tagging can be disabled by selecting an empth string.
 
 #### Options
      -h, --help     display this help and exit  
