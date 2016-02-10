@@ -215,13 +215,13 @@ guess(){ # Try to find an audio file if the one in the cue doesn't exist or isn'
 	oldIFS=$IFS && IFS=$(printf '\n\b')
 	# Find files with the specified file extension or the same one as the file in the cue
 	test -n "$1" && ext="$1" || ext=$( printf '%s' $FILE | sed 's/.*\.\(.*\)$/\1/' )
-	files=$( find -maxdepth 1 | grep -i "\.$ext$" )
 	# if there's exactly one, assume it's the right one
-	if [ $( printf '%s' "$files" | wc -l | sed 's/[^0-9]//g' ) -eq 0 ]; then
-		printf '%s' "$files" | sed 's/.*\///'
+	if [ $( find . ! -name . -prune -print | grep -i "\.$ext$" | wc -l | sed 's/[^0-9]//g' ) -eq 1 ]; then
+		printf '%s' "$( find . ! -name . -prune -print | grep -i "\.$ext$" )" | sed 's/.*\///'
 	# Otherwise, look for compatible audio files with the same name as the cue file
 	else
-		files=$( find -maxdepth 1 | grep -i '.*\.\(flac\|wav\|w64\|raw\|rf64\|oga\|ogg\|aiff\?\)$' )
+		files=$( find . ! -name . -prune -print |
+			grep -i '\.\(flac\|wav\|w64\|raw\|rf64\|oga\|ogg\|aiff\?\)$' )
 		cuename="$( printf '%s' $CUE | sed 's/\(.*\/\)\?\(.*\)\.cue$/\2/I' )"
 		count=0
 		for file in $files; do
@@ -310,22 +310,26 @@ elif [ ! -f "$FILE" ]; then
 fi
 # Make sure that the audio file is a flac file, and try to convert it or find a different one if it isn't
 if [ -f "$FILE" ] && ! printf '%s' "$FILE" | grep -iq '\.flac$'; then
+	printf '%s' "$NAME: Attempting to convert $FILE..."
 	TEMPFILE="$( printf '%s' "$FILE" | sed 's/\(.*\)\..*/\1/' ).flac"
 	if [ -w '/tmp/' ]; then
 		TEMPFILE="/tmp/$TEMPFILE"; f='-f'
 	fi
 	if flac --totally-silent -0 "$f" -o "$TEMPFILE" "$FILE"; then
 		FILE="$TEMPFILE"; tempfile=0
+		printf '%s\n' " Done."
 	else
-		printf '%s\n' "$NAME: Format not supported by the flac encoder: \"$FILE\""
+		printf '\n%s\n' "$NAME: File conversion failed."
 		FILE="$(guess flac)"
 		test -f "$FILE" && printf '%s\n' "$NAME: Trying \"$FILE\" instead..."
 	fi
 	if [ -f "$FILE" ] && ! printf '%s' "$FILE" | grep -iq '\.flac$'; then
+		printf '%s' "$NAME: Attempting to convert $FILE..."
 		if flac --totally-silent -0 "$f" -o "$TEMPFILE" "$FILE"; then
 			FILE="$TEMPFILE"; tempfile=0
+			printf '%s\n' " Done."
 		else
-			printf '%s\n' "$NAME: File conversion failed."
+			printf '\n%s\n' "$NAME: File conversion failed."
 		fi
 	fi
 fi
@@ -335,13 +339,14 @@ if [ -f "$FILE" ] && printf '%s' "$FILE" | grep -iq '\.flac$'; then
 else
 	>&2 printf '%s\n' "$NAME: No compatible audio file found." & exit 1
 fi
-# Remove a temporary file that may or may not have been created
-test -n "$tempfile" && rm "$FILE"
-# Exit 1 if any of the encoding processes did not exit 0
+# Exit 1 if any of the encoding processes did not exit 0, remove the temporary file if one was created
 for PID in $PIDS; do
 	wait $PID
 	if [ $? -ne 0 ]; then
+		test -n "$tempfile" && rm "$FILE"
 		exit 1
 	fi
 done
+test -n "$tempfile" && rm "$FILE"
+exit 0
 
