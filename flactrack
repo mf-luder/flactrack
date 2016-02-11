@@ -104,7 +104,7 @@ main(){
 		# Gather per-track metadata
 		if [ $TRACKNUMBER -eq '01' ]; then
 			START='00:00.00'
-		elif printf '%s' "$END" | grep -q '^[0-9]\{2\}:[0-9]\{2\}\.[0-9]\{2\}$'; then
+		elif printf '%s' "$END" | grep -q '^[0-9]\{2\}:[0-9]\{2\}\.[0-9][0-9]*$'; then
 			START="$END"
 		else
 			>&2 printf '%s\n' "$NAME: Missing or malformed initial index for track $TRACKNUMBER"
@@ -183,6 +183,10 @@ main(){
 						}
 					}' "$CUE" )
 			fi
+			# Convert the INDEX frame (1/75th of a second) to a fraction of a second for flac
+			fraction=$( printf '%s' "$END" | sed 's/^.*\(\.[0-9]\{2\}\)\s*$/0\1/' )
+			fraction=$( printf '%s\n' "scale=16;$fraction*(4/3)" | bc )
+			END=$( printf '%s' "$END" | sed "s/\.[0-9]\{2\}\s*$/$fraction/" )
 			# Create the files
 			flac -c -d --totally-silent --skip=$START --until=$END "$FILE" |
 			eval flac --totally-silent $force $compression $TAGS -o $FILENAME - &
