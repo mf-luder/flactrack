@@ -1,6 +1,6 @@
 # flactrack
 
-Flactrack is a shell script for splitting single-file albums into tagged flac tracks using a cue file. It uses only the command line flac encoder/decoder and standard utilities, and is meant to be portable and robust.
+Flactrack is a shell script for splitting single-file albums into tagged flac tracks using a cue file. It uses only the command line flac encoder/decoder and standard utilities, and is meant to be portable, robust, and high performance. Tracks are encoded concurrently, which makes the script more CPU intensive but also much faster than alternatives that encode tracks one at a time.
 
 ## Usage
 
@@ -30,6 +30,9 @@ Note that embedded cue sheets only retain indexing information, and so using an 
 Created tracks are tagged with metadata from the cue file and a cover image. If the metadata in the cue is incorrect or missing, the equivalent tags will be as well. You can change the content of the tags by editing the cue file before you run the script and using the --image option.
 
 Cover images can be jpg or png files. In order for the script to find it automatically, the image must have the same name as the cue file (sans file extension) or be called "cover", "front_cover" "folder", "front", (case insensitive) or the hidden equivelent of any of those (prepended with a dot). The script looks in the cue file's directory and any immediate subdirectories for jpg first, then png, and uses the first match it finds. Alternatively, you can specify an image on the command line with "--image=\<file\>". If the specified image does not exist, the option will be ignored and the script will look for a suitable image in the usual manner. Image tagging can be disabled by selecting an empty string (--image="").
+
+##### Manual Tagging
+A track's tags can be edited after the fact using the "metaflac" command. See "metaflac --help" or "man metaflac".
 
 #### Options
      -h, --help     display this help and exit  
