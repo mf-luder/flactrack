@@ -1,13 +1,13 @@
 # flactrack
 
-Flactrack is a shell script for splitting single-file albums into tagged flac tracks using a cue file. It uses only the command line flac encoder/decoder and standard utilities, and is meant to be portable, robust, and high performance. Tracks are encoded concurrently, which makes the script more CPU intensive but also much faster than alternatives that encode tracks one at a time.
+Flactrack is a shell script for splitting single-file albums into tagged flac tracks using a cue file. It uses only the command line flac encoder/decoder and standard utilities, and is meant to be portable and robust. Tracks are encoded concurrently, which makes job significantly faster on multi-core CPUs.
 
 ## Usage
 
     flactrack [options] <file.cue>
 
 #### File Selection
-The sript expects one cue file as a command line argument. The name of the matching audio file is read from the cue file. If that audio file cannot be found (perhaps because it has been renamed and the cue file has not been updated accordingly), the script will look for an audio file that's likely to be the right one based on its name. If the script is unable to find the matching audio file, simply edit the FILE line in the cue file with a text editor so that it contains the correct file name and run the script again.
+The sript expects one cue file as a command line argument. The name of the matching audio file is read from the cue sheet. If that audio file cannot be found (perhaps because it has been renamed and the cue file has not been updated accordingly), the script will look for an audio file that's likely to be the right one based on its name. If the script is unable to find the matching audio file, simply edit the FILE line in the cue file with a text editor so that it contains the correct file name and run the script again.
 
 ##### Supported and Unsupported Audio Formats
 Flactrack only supports those audio formats that are supported by the flac encoder. If the audio file to be split is not a .flac file, the script will attempt to use the flac encoder to create a temporary flac file and split that one instead. This lengthens the job considerably. See the flac encoder's documentation for a list of supported input formats. Because .wav is one of the supported formats, splitting an unsupported file type (e.g. ape) is as simple as running the appropriate decoder first:
