@@ -1,6 +1,6 @@
 # flactrack
 
-Flactrack is a shell script for splitting single-file albums into tagged flac tracks using a cue file. It uses only the command line flac encoder/decoder and standard utilities, and is meant to be portable and robust. Tracks are encoded concurrently, which makes the job significantly faster on multi-core CPUs then it would otherwise be.
+Flactrack is a shell script for splitting single-file albums into tagged flac tracks using a cue file. It uses only the command line flac encoder/decoder and standard utilities, and is meant to be portable and robust. Tracks are encoded concurrently, which makes the job significantly faster on multi-core CPUs than it would otherwise be.
 
 ## Usage
 
