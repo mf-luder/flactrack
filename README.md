@@ -21,18 +21,18 @@ Flactrack should be able to find the decoded file automatiaclly. Similarly, conv
     mkdir MP3; for t in [0-9][0-9]\ -\ *.flac; do ffmpeg -i "$t" -ab 320k MP3/"${t%.flac}.mp3"; done
 
 ##### Embeded Cue Sheets
-Flac supports embedding cue sheets in audio files. The "metaflac" command can be used to extract an embedded cue sheet to a file:
+Flac supports embedding cue sheets in audio files. The `metaflac` command can be used to extract an embedded cue sheet to a file:
 
     metaflac --export-cuesheet-to=<file.cue> <file.flac>
 Note that embedded cue sheets only retain indexing information, and so using an extracted cue sheet to split a file will result in tracks that are not tagged, except maybe for a cover image.
 
 #### Tagging
-Created tracks are tagged with metadata from the cue file and a cover image. If the metadata in the cue is incorrect or missing, the equivalent tags will be as well. You can change the content of the tags by editing the cue file before you run the script and using the --image option.
+Created tracks are tagged with metadata from the cue file and a cover image. If the metadata in the cue is incorrect or missing, the equivalent tags will be as well. You can change the content of the tags by editing the cue file before you run the script and using the `--image` option.
 
-Cover images can be jpg or png files. In order for the script to find it automatically, the image must have the same name as the cue file (sans file extension) or be called "cover", "front_cover" "folder", "front", (case insensitive) or the hidden equivelent of any of those (prepended with a dot). The script looks in the cue file's directory and any immediate subdirectories for jpg first, then png, and uses the first match it finds. Alternatively, you can specify an image on the command line with "--image=\<file\>". If the specified image does not exist, the option will be ignored and the script will look for a suitable image in the usual manner. Image tagging can be disabled by selecting an empty string (--image="").
+Cover images can be jpg or png files. In order for the script to find it automatically, the image must have the same name as the cue file (sans file extension) or be called "cover", "front_cover" "folder", "front", (case insensitive) or the hidden equivelent of any of those (prepended with a dot). The script looks in the cue file's directory and any immediate subdirectories for jpg first, then png, and uses the first match it finds. Alternatively, you can specify an image on the command line with `--image=\<file\>`. If the specified image does not exist, the option will be ignored and the script will look for a suitable image in the usual manner. Image tagging can be disabled by selecting an empty string (`--image=""`).
 
 ##### Manual Tagging
-A track's tags can be edited after the fact using the "metaflac" command. See "metaflac --help" or "man metaflac".
+A track's tags can be edited after the fact using the `metaflac` command. See `metaflac --help` or `man metaflac`.
 
 #### Options
      -h, --help     display this help and exit  
@@ -46,7 +46,7 @@ A track's tags can be edited after the fact using the "metaflac" command. See "m
 Options must be declared seperately. Strings of short options are not supported.
 
 ##### File Removal
-Flactrack does not have an option to remove the original file after splitting it into tracks. This behavior is very easy to produce using '&& rm':
+Flactrack does not have an option to remove the original file after splitting it into tracks. This behavior is very easy to produce using `&& rm`:
 
     flactrack <file.cue> && rm <file.flac>
 Because the script only exits with status 0 if all of the tracks are created successfully, this will remove \<file.flac\> only under that condition.
