@@ -54,13 +54,13 @@ Because the script only exits with status 0 if all of the tracks are created suc
 ### Installation, Updates, and Uninstallation
 Installing the script is as simple as downloading it, making it executable, and putting it in your PATH. Make sure that you also have the Xiph.org command line flac encoder/decoder program. For updates, repeat the installation process, overwriting the original file. To uninstall the script, simply delete the file.
 
-    # Download:  
-    curl https://raw.githubusercontent.com/mf-luder/flactrack/master/flactrack -o ~/flactrack
-    # or, alternatively:
-    wget https://raw.githubusercontent.com/mf-luder/flactrack/master/flactrack -O ~/flactrack
-    
-    # Install:
-    chmod +x ~/flactrack && sudo mv ~/flactrack /usr/local/bin/flactrack
-    
-    # Remove:
-    sudo rm /usr/local/bin/flactrack
+**Download:**  
+    `curl https://raw.githubusercontent.com/mf-luder/flactrack/master/flactrack -o ~/flactrack`  
+or, alternatively:  
+    `wget https://raw.githubusercontent.com/mf-luder/flactrack/master/flactrack -O ~/flactrack`
+
+**Install:**  
+    `chmod +x ~/flactrack && sudo mv ~/flactrack /usr/local/bin/flactrack`
+
+**Remove:**  
+    `sudo rm /usr/local/bin/flactrack`
