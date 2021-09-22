@@ -46,10 +46,10 @@ A track's tags can be edited after the fact using the `metaflac` command. See `m
 Options must be declared seperately. Strings of short options are not supported.
 
 ##### File Removal
-Flactrack does not have an option to remove the original file after splitting it into tracks. This behavior is very easy to produce using `&& rm`:
+Flactrack does not have an option to remove the original file after splitting it into tracks. This is very easy to do using `&& rm`:
 
     flactrack <file.cue> && rm <file.flac>
-Because the script only exits with status 0 if all of the tracks are created successfully, this will remove \<file.flac\> only under that condition.
+This will only remove \<file.flac\> if the script runs successfully.
 
 ### Installation, Updates, and Uninstallation
 Installing the script is as simple as downloading it, making it executable, and putting it in your PATH. Make sure that you also have the Xiph.org command line flac encoder/decoder program. For updates, repeat the installation process, overwriting the original file. To uninstall the script, simply delete the file.
